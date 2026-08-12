@@ -36,6 +36,15 @@
                             <input type="text" name="course_name" class="form-control" placeholder="e.g. Web Development" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-medium">Assign Teacher</label>
+                            <select name="teacher_id" class="form-select">
+                                <option value="">-- Select Teacher --</option>
+                                @foreach($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label fw-medium">Start Date</label>
                             <input type="date" name="start_date" class="form-control">
                         </div>
@@ -60,6 +69,7 @@
                                 <tr>
                                     <th class="ps-3">Batch</th>
                                     <th>Course</th>
+                                    <th>Teacher</th>
                                     <th>Start Date</th>
                                     <th>Total Students</th>
                                     <th>Action</th>
@@ -70,6 +80,15 @@
                                     <tr>
                                         <td class="ps-3 fw-semibold text-primary">{{ $batch->batch_name }}</td>
                                         <td>{{ $batch->course_name }}</td>
+                                        <td>
+                                            @if($batch->teacher)
+                                                <span class="badge bg-secondary-subtle text-dark border fw-medium">
+                                                    <i class="bi bi-person-badge me-1"></i>{{ $batch->teacher->name }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted small">Not Assigned</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $batch->start_date ?? 'N/A' }}</td>
                                         <td>
                                             <span class="badge bg-info-subtle text-info fw-bold fs-6">
@@ -88,7 +107,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">No batches created yet.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">No batches created yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

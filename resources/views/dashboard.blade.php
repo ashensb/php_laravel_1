@@ -44,6 +44,17 @@
             </div>
         </div>
 
+        <!-- Total Teachers Card (New) -->
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box bg-purple text-white bg-indigo shadow-sm rounded-3" style="background-color: #6f42c1;">
+                <span class="info-box-icon bg-light text-dark rounded-start-3"><i class="bi bi-person-badge-fill fs-2"></i></span>
+                <div class="info-box-content p-3">
+                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Total Teachers</span>
+                    <span class="info-box-number fs-3 fw-bold">{{ $totalTeachers }}</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Active Batches Card -->
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box bg-success text-white shadow-sm rounded-3">
@@ -55,33 +66,27 @@
             </div>
         </div>
 
-        <!-- New This Month Card -->
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box bg-warning text-dark shadow-sm rounded-3">
-                <span class="info-box-icon bg-warning-subtle text-warning rounded-start-3"><i class="bi bi-person-plus-fill fs-2"></i></span>
-                <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-dark-50 small">New This Month</span>
-                    <span class="info-box-number fs-3 fw-bold">{{ $newThisMonth }}</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Quick Register Action Card -->
         <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box bg-info text-white shadow-sm rounded-3">
                 <span class="info-box-icon bg-info-subtle text-info rounded-start-3"><i class="bi bi-lightning-charge-fill fs-2"></i></span>
                 <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Quick Action</span>
-                    <a href="{{ route('student.register') }}" class="btn btn-sm btn-light text-info fw-bold mt-1">
-                        + Add Student
-                    </a>
+                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Quick Actions</span>
+                    <div class="d-flex gap-1 mt-1">
+                        <a href="{{ route('student.register') }}" class="btn btn-xs btn-light text-info fw-bold btn-sm">
+                            + Student
+                        </a>
+                        <a href="{{ route('teacher.create') }}" class="btn btn-xs btn-dark fw-bold btn-sm">
+                            + Teacher
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Analytics & Recent Registrations -->
-    <div class="row g-4">
+    <!-- Analytics & Recent Tables -->
+    <div class="row g-4 mb-4">
         <!-- Live Chart: Students per Batch -->
         <div class="col-md-6">
             <div class="card shadow-sm border-0 rounded-3 h-100">
@@ -96,12 +101,12 @@
             </div>
         </div>
 
-        <!-- Live Table: Recent Registrations -->
+        <!-- Live Table: Recent Student Registrations -->
         <div class="col-md-6">
             <div class="card shadow-sm border-0 rounded-3 h-100">
                 <div class="card-header bg-body-tertiary border-0 py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title fw-bold mb-0">
-                        <i class="bi bi-clock-history me-2 text-warning"></i>Recent Registrations
+                        <i class="bi bi-clock-history me-2 text-warning"></i>Recent Students
                     </h5>
                     <a href="{{ route('student.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
                 </div>
@@ -113,7 +118,7 @@
                                     <th class="ps-3">Reg No</th>
                                     <th>Name</th>
                                     <th>Batch</th>
-                                    <th>Registered Date</th>
+                                    <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -147,9 +152,135 @@
         </div>
     </div>
 
+    <!-- Recently Joined Teachers Section -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-body-tertiary border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-bold mb-0">
+                        <i class="bi bi-person-badge me-2 text-indigo" style="color: #6f42c1;"></i>Recently Joined Teachers
+                    </h5>
+                    <a href="{{ route('teacher.index') }}" class="btn btn-sm btn-link text-decoration-none">View All Teachers</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Name</th>
+                                    <th>Email</th>
+                                    <th>Qualification</th>
+                                    <th>Joined Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentTeachers as $teacher)
+                                    <tr>
+                                        <td class="ps-3 fw-semibold">{{ $teacher->name }}</td>
+                                        <td>{{ $teacher->email }}</td>
+                                        <td>
+                                          <span class="badge bg-primary-subtle text-primary-emphasis border   border-primary-subtle px-2 py-1">
+                                              {{ $teacher->qualification ?? 'Lecturer' }}
+                                           </span>
+                                        </td>
+                                        <td class="small text-muted">{{ $teacher->created_at ? $teacher->created_at->format('Y-m-d') : 'N/A' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No teachers registered yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Include Chart.js script -->
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const storedTheme = localStorage.getItem('theme')
+
+    const getPreferredTheme = () => {
+      if (storedTheme) {
+        return storedTheme
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+
+    const setTheme = function (theme) {
+      if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark')
+      } else if (theme === 'auto') {
+        document.documentElement.setAttribute('data-bs-theme', 'light')
+      } else {
+        document.documentElement.setAttribute('data-bs-theme', theme)
+      }
+    }
+
+    setTheme(getPreferredTheme())
+
+    const showActiveTheme = (theme, focus = false) => {
+      const themeSwitcher = document.querySelector('#bd-theme')
+
+      if (!themeSwitcher) {
+        return
+      }
+
+      const activeThemeIcon = document.querySelector('.theme-icon-active')
+      const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+
+      document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+        element.classList.remove('active')
+        element.setAttribute('aria-pressed', 'false')
+      })
+
+      if (btnToActive) {
+        btnToActive.classList.add('active')
+        btnToActive.setAttribute('aria-pressed', 'true')
+      }
+      
+      // Icon visibility toggle
+      const lightIcon = document.querySelector('[data-lte-theme-icon="light"]')
+      const darkIcon = document.querySelector('[data-lte-theme-icon="dark"]')
+      const autoIcon = document.querySelector('[data-lte-theme-icon="auto"]')
+
+      if (lightIcon && darkIcon && autoIcon) {
+        lightIcon.classList.add('d-none')
+        darkIcon.classList.add('d-none')
+        autoIcon.classList.add('d-none')
+
+        if (theme === 'light') lightIcon.classList.remove('d-none')
+        else if (theme === 'dark') darkIcon.classList.remove('d-none')
+        else autoIcon.classList.remove('d-none')
+      }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (storedTheme !== 'light' || storedTheme !== 'dark') {
+        setTheme(getPreferredTheme())
+      }
+    })
+
+    showActiveTheme(getPreferredTheme())
+
+    document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const theme = toggle.getAttribute('data-bs-theme-value')
+        localStorage.setItem('theme', theme)
+        setTheme(theme)
+        showActiveTheme(theme, true)
+      })
+    })
+  })
+</script>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('batchChart').getContext('2d');
