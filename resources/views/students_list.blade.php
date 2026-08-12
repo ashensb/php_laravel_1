@@ -11,6 +11,28 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    <!-- Search Bar Component -->
+<div class="row mb-3 align-items-center">
+    <div class="col-md-6 ms-auto">
+        <form action="{{ route('student.index') }}" method="GET" class="d-flex gap-2">
+            <div class="input-group">
+                <span class="input-group-text bg-body-tertiary border-secondary-subtle">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}" 
+                       class="form-control" 
+                       placeholder="Search by Reg No, Name or Email...">
+                @if(request('search'))
+                    <a href="{{ route('student.index') }}" class="btn btn-outline-secondary">Clear</a>
+                @endif
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -31,14 +53,17 @@
                 <td>{{ $student->dob }}</td>
                 <td>{{ $student->age }}</td>
                 <td>
-                    <!-- Edit Button -->
-                    <a href="{{ route('student.edit', $student->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <!-- View Button -->
+                 <a href="{{ route('student.show', $student->id) }}" class="btn btn-sm btn-info text-white">View</a>
 
-                    <!-- Delete Form -->
-                    <form action="{{ route('student.destroy', $student->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      <!-- Edit Button -->
+                  <a href="{{ route('student.edit', $student->id) }}" class="btn btn-sm btn-warning">Edit</a>
+
+                       <!-- Delete Form -->
+                      <form action="{{ route('student.destroy', $student->id) }}" method="POST"   style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete?');">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </td>
             </tr>

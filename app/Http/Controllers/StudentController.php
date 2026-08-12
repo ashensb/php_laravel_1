@@ -8,12 +8,24 @@ use App\Models\Batch;
 
 class StudentController extends Controller
 {
-    // 1. Display all students with their assigned batch
-    public function index() 
+    // 1. Display all students with search & batch relationship
+    public function index(Request $request)
     {
-        // Fetch students along with batch relationship data
-        $students = Student::with('batch')->get();
-        return view('students_list', compact('students'));
+        // Search query parameter
+        $search = $request->input('search');
+
+        // Build search query for Reg No, Name, or Email
+        $students = Student::with('batch')
+            ->when($search, function ($query, $search) {
+                return $query->where('reg_no', 'LIKE', "%{$search}%")
+                             ->orWhere('name', 'LIKE', "%{$search}%")
+                             ->orWhere('email', 'LIKE', "%{$search}%");
+            })
+            ->latest()
+            ->get();
+
+        // Correct view name: students_list (.blade.php)
+        return view('students_list', compact('students', 'search'));
     }
 
     // 2. Load student registration form with batches dropdown
@@ -26,6 +38,11 @@ class StudentController extends Controller
     // 3. Store new student details
     public function store(Request $request) 
     {
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = ImageUpload::uploadImage($request->file('image'), 'Student/Profile');
+        }
+
         Student::create([
             'reg_no'   => $request->reg_no,
             'name'     => $request->name,
@@ -34,12 +51,13 @@ class StudentController extends Controller
             'age'      => $request->age,
             'password' => $request->password,
             'batch_id' => $request->batch_id,
+            'img'      => $imagePath,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Student registered successfully!');
     }
 
-    // 4. Load edit student page with student data and batches list
+    // 4. Load edit student page
     public function edit($id) 
     {
         $student = Student::findOrFail($id);
@@ -51,7 +69,8 @@ class StudentController extends Controller
     public function update(Request $request, $id) 
     {
         $student = Student::findOrFail($id);
-        $student->update([
+
+        $data = [
             'reg_no'   => $request->reg_no,
             'name'     => $request->name,
             'email'    => $request->email,
@@ -59,7 +78,13 @@ class StudentController extends Controller
             'age'      => $request->age,
             'password' => $request->password,
             'batch_id' => $request->batch_id,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            $data['img'] = ImageUpload::uploadImage($request->file('image'), 'Student/Profile');
+        }
+
+        $student->update($data);
 
         return redirect()->route('student.index')->with('success', 'Student updated successfully!');
     }
@@ -71,5 +96,14 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('student.index')->with('success', 'Student deleted successfully!');
+    }
+
+    // Student profile එක පෙන්වන function එක
+     public function show($id)
+    {
+      // students and batch details load kirima..
+     $student = Student::with('batch')->findOrFail($id);
+    
+     return view('show_student', compact('student'));
     }
 }

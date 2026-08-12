@@ -25,7 +25,7 @@
         </div>
 
         <div class="card-body p-4">
-            <form action="{{ route('student.store') }}" method="POST">
+            <form action="{{ route('student.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="row g-3">
@@ -96,7 +96,19 @@
                             <input type="password" name="password" class="form-control" placeholder="Enter secure password" required>
                         </div>
                     </div>
+
+                    <!-- Image Upload -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-medium">Image <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-tertiary"><i class="bi bi-image"></i></span>
+                            <input type="file" name="image" class="form-control" accept="image/*" required>
+                        </div>
+                    </div>
                 </div>
+
+                
+
 
                 <hr class="my-4">
 

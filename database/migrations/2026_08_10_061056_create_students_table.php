@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('dob');
             $table->integer('age');
             $table->string('password');
+            $table->string('img');
             $table->timestamps();
         });
     }
