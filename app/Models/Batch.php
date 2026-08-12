@@ -16,4 +16,9 @@ class Batch extends Model
     {
         return $table = $this->hasMany(Student::class);
     }
+
+    public function teacher()
+   {
+       return $this->belongsTo(Teacher::class);
+   }
 }

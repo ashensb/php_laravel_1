@@ -4,28 +4,37 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Batch;
+use App\Models\Teacher;
 
 class BatchController extends Controller
 {
-    // List all batches
+    // List all batches with student count and assigned teacher
     public function index()
     {
-        $batches = Batch::withCount('students')->get(); // Count students in each batch
-        return view('batches.index', compact('batches'));
+        // Batch teachers and student count retrive
+        $batches = Batch::with('teacher')->withCount('students')->latest()->get();
+        
+        // Form include teachers list
+        $teachers = Teacher::all();
+
+        return view('batches.index', compact('batches', 'teachers'));
     }
 
-    // Store new batch
+    // Store new batch with assigned teacher
     public function store(Request $request)
     {
         $request->validate([
-            'batch_name' => 'required',
-            'course_name' => 'required'
+            'batch_name'  => 'required|string|max:255',
+            'course_name' => 'required|string|max:255',
+            'start_date'  => 'nullable|date',
+            'teacher_id'  => 'nullable|exists:teachers,id',
         ]);
 
         Batch::create([
-            'batch_name' => $request->batch_name,
+            'batch_name'  => $request->batch_name,
             'course_name' => $request->course_name,
-            'start_date' => $request->start_date
+            'start_date'  => $request->start_date,
+            'teacher_id'  => $request->teacher_id,
         ]);
 
         return redirect()->back()->with('success', 'Batch created successfully!');

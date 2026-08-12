@@ -21,4 +21,6 @@ class Teacher extends Model
     {
         return $this->hasMany(Batch::class);
     }
+
+    
 }
