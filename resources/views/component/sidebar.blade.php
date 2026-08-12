@@ -17,7 +17,7 @@
                     </a>
                 </li>
 
-                <!-- Student Management -->
+                <!-- Student Management Dropdown -->
                 <li class="nav-item {{ request()->is('student*') ? 'menu-open' : '' }}">
                     <a href="#" class="nav-link">
                         <i class="nav-icon bi bi-people-fill"></i>
@@ -41,6 +41,31 @@
                         </li>
                     </ul>
                 </li>
+
+                <!-- Teacher Management Dropdown -->
+              <li class="nav-item {{ request()->is('teacher*') ? 'menu-open' : '' }}">
+                     <a href="#" class="nav-link">
+                        <i class="nav-icon bi bi-person-badge-fill"></i>
+                         <p>
+                        Teacher Management
+                        <i class="nav-arrow bi bi-chevron-right"></i>
+                        </p>
+                     </a>
+                  <ul class="nav nav-treeview">
+                <li class="nav-item">
+                   <a href="{{ route('teacher.create') }}" class="nav-link {{ request()->routeIs('teacher.create') ? 'active' : '' }}">
+                    <i class="nav-icon bi bi-person-plus-fill"></i>
+                     <p>Teacher Register</p>
+                  </a>
+              </li>
+              <li class="nav-item">
+                 <a href="{{ route('teacher.index') }}" class="nav-link {{ request()->routeIs('teacher.    index') ? 'active' : '' }}">
+                    <i class="nav-icon bi bi-list-ul"></i>
+                  <p>All Teachers List</p>
+                 </a>
+              </li>
+           </ul>
+         </li>
 
                 <!-- Batch Management -->
                 <li class="nav-item">
