@@ -11,10 +11,8 @@ class StudentController extends Controller
     // 1. Display all students with search & batch relationship
     public function index(Request $request)
     {
-        // Search query parameter
         $search = $request->input('search');
 
-        // Build search query for Reg No, Name, or Email
         $students = Student::with('batch')
             ->when($search, function ($query, $search) {
                 return $query->where('reg_no', 'LIKE', "%{$search}%")
@@ -24,15 +22,14 @@ class StudentController extends Controller
             ->latest()
             ->get();
 
-        // Correct view name: students_list (.blade.php)
-        return view('students_list', compact('students', 'search'));
+        return view('admin.students.index', compact('students', 'search'));
     }
 
     // 2. Load student registration form with batches dropdown
     public function create() 
     {
         $batches = Batch::all();
-        return view("create", compact('batches'));
+        return view('admin.students.create', compact('batches'));
     }
 
     // 3. Store new student details
@@ -54,7 +51,7 @@ class StudentController extends Controller
             'img'      => $imagePath,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Student registered successfully!');
+        return redirect()->route('student.index')->with('success', 'Student registered successfully!');
     }
 
     // 4. Load edit student page
@@ -62,7 +59,7 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
         $batches = Batch::all();
-        return view('edit_student', compact('student', 'batches'));
+        return view('admin.students.edit', compact('student', 'batches'));
     }
 
     // 5. Update existing student details
@@ -98,12 +95,10 @@ class StudentController extends Controller
         return redirect()->route('student.index')->with('success', 'Student deleted successfully!');
     }
 
-    // Student profile එක පෙන්වන function එක
-     public function show($id)
+    // 7. Student profile show function
+    public function show($id)
     {
-      // students and batch details load kirima..
-     $student = Student::with('batch')->findOrFail($id);
-    
-     return view('show_student', compact('student'));
+        $student = Student::with('batch')->findOrFail($id);
+        return view('admin.students.show', compact('student'));
     }
 }

@@ -11,13 +11,10 @@ class BatchController extends Controller
     // List all batches with student count and assigned teacher
     public function index()
     {
-        // Batch teachers and student count retrive
         $batches = Batch::with('teacher')->withCount('students')->latest()->get();
-        
-        // Form include teachers list
         $teachers = Teacher::all();
 
-        return view('batches.index', compact('batches', 'teachers'));
+        return view('admin.batches.index', compact('batches', 'teachers'));
     }
 
     // Store new batch with assigned teacher

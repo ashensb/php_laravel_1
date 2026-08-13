@@ -20,13 +20,13 @@ class TeacherController extends Controller
         ->latest()
         ->get();
 
-        return view('teachers.index', compact('teachers', 'search'));
+        return view('admin.teachers.index', compact('teachers', 'search'));
     }
 
     // 2. Load Teacher Registration Form
     public function create()
     {
-        return view('teachers.create');
+        return view('admin.teachers.create');
     }
 
     // 3. Store Teacher Data
@@ -58,14 +58,14 @@ class TeacherController extends Controller
     public function show($id)
     {
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.show', compact('teacher'));
+        return view('admin.teachers.show', compact('teacher'));
     }
 
     // 5. Edit Teacher Form
     public function edit($id)
     {
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.edit', compact('teacher'));
+        return view('admin.teachers.edit', compact('teacher'));
     }
 
     // 6. Update Teacher Data

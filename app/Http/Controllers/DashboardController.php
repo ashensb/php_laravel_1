@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $batchNames = $batches->pluck('batch_name');
         $studentCounts = $batches->pluck('students_count');
 
-        return view('dashboard', compact(
+        return view('admin.dashboard', compact(
             'totalStudents', 
             'totalBatches', 
             'totalTeachers', 

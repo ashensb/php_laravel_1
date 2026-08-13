@@ -1,4 +1,4 @@
-@extends('app')
+@extends('component.app')
 
 @section('content')
 <div class="container mt-4">

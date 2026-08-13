@@ -1,4 +1,4 @@
-@extends('app')
+@extends('component.app')
 
 @push('header')
 <div class="app-content-header">
