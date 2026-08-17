@@ -13,7 +13,7 @@ return new class extends Migration
     {
        Schema::create('batches', function (Blueprint $table) {
         $table->id();
-        $table->string('batch_name'); // e.g. Batch 01 - Web Dev
+        $table->string('name'); // e.g. Batch 01 - Web Dev
         $table->string('course_name'); // e.g. Full Stack Development
         $table->date('start_date')->nullable();
         $table->timestamps();

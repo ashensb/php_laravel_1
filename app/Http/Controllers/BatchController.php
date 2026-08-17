@@ -28,7 +28,7 @@ class BatchController extends Controller
         ]);
 
         Batch::create([
-            'batch_name'  => $request->batch_name,
+            'name'        => $request->batch_name,
             'course_name' => $request->course_name,
             'start_date'  => $request->start_date,
             'teacher_id'  => $request->teacher_id,

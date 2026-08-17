@@ -44,9 +44,9 @@
             </div>
         </div>
 
-        <!-- Total Teachers Card (New) -->
+        <!-- Total Teachers Card -->
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box bg-purple text-white bg-indigo shadow-sm rounded-3" style="background-color: #6f42c1;">
+            <div class="info-box text-white shadow-sm rounded-3" style="background-color: #6f42c1;">
                 <span class="info-box-icon bg-light text-dark rounded-start-3"><i class="bi bi-person-badge-fill fs-2"></i></span>
                 <div class="info-box-content p-3">
                     <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Total Teachers</span>
@@ -73,10 +73,10 @@
                 <div class="info-box-content p-3">
                     <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Quick Actions</span>
                     <div class="d-flex gap-1 mt-1">
-                        <a href="{{ route('student.register') }}" class="btn btn-xs btn-light text-info fw-bold btn-sm">
+                        <a href="{{ route('student.register') }}" class="btn btn-light text-info fw-bold btn-sm">
                             + Student
                         </a>
-                        <a href="{{ route('teacher.create') }}" class="btn btn-xs btn-dark fw-bold btn-sm">
+                        <a href="{{ route('teacher.create') }}" class="btn btn-dark fw-bold btn-sm">
                             + Teacher
                         </a>
                     </div>
@@ -129,7 +129,7 @@
                                         <td>
                                             @if($student->batch)
                                                 <span class="badge bg-primary-subtle text-info border border-info-subtle px-2 py-1">
-                                                    {{ $student->batch->batch_name }}
+                                                    {{ $student->batch->name ?? $student->batch->batch_name }}
                                                 </span>
                                             @else
                                                 <span class="badge bg-secondary-subtle text-warning border border-warning-subtle px-2 py-1">
@@ -137,7 +137,7 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="small text-muted">{{ $student->created_at->format('Y-m-d') }}</td>
+                                        <td class="small text-muted">{{ $student->created_at ? $student->created_at->format('Y-m-d') : 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -158,7 +158,7 @@
             <div class="card shadow-sm border-0 rounded-3">
                 <div class="card-header bg-body-tertiary border-0 py-3 d-flex justify-content-between align-items-center">
                     <h5 class="card-title fw-bold mb-0">
-                        <i class="bi bi-person-badge me-2 text-indigo" style="color: #6f42c1;"></i>Recently Joined Teachers
+                        <i class="bi bi-person-badge me-2" style="color: #6f42c1;"></i>Recently Joined Teachers
                     </h5>
                     <a href="{{ route('teacher.index') }}" class="btn btn-sm btn-link text-decoration-none">View All Teachers</a>
                 </div>
@@ -179,7 +179,7 @@
                                         <td class="ps-3 fw-semibold">{{ $teacher->name }}</td>
                                         <td>{{ $teacher->email }}</td>
                                         <td>
-                                          <span class="badge bg-primary-subtle text-primary-emphasis border   border-primary-subtle px-2 py-1">
+                                          <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-2 py-1">
                                               {{ $teacher->qualification ?? 'Lecturer' }}
                                            </span>
                                         </td>
@@ -200,110 +200,86 @@
 
 </div>
 
-<!-- Include Chart.js script -->
-
+<!-- Theme Switcher Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const storedTheme = localStorage.getItem('theme')
+    const storedTheme = localStorage.getItem('theme');
 
     const getPreferredTheme = () => {
       if (storedTheme) {
-        return storedTheme
+        return storedTheme;
       }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
 
     const setTheme = function (theme) {
       if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark')
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
       } else if (theme === 'auto') {
-        document.documentElement.setAttribute('data-bs-theme', 'light')
+        document.documentElement.setAttribute('data-bs-theme', 'light');
       } else {
-        document.documentElement.setAttribute('data-bs-theme', theme)
+        document.documentElement.setAttribute('data-bs-theme', theme);
       }
-    }
+    };
 
-    setTheme(getPreferredTheme())
+    setTheme(getPreferredTheme());
 
-    const showActiveTheme = (theme, focus = false) => {
-      const themeSwitcher = document.querySelector('#bd-theme')
+    const showActiveTheme = (theme) => {
+      const themeSwitcher = document.querySelector('#bd-theme');
+      if (!themeSwitcher) return;
 
-      if (!themeSwitcher) {
-        return
-      }
-
-      const activeThemeIcon = document.querySelector('.theme-icon-active')
-      const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
+      const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
 
       document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
-        element.classList.remove('active')
-        element.setAttribute('aria-pressed', 'false')
-      })
+        element.classList.remove('active');
+        element.setAttribute('aria-pressed', 'false');
+      });
 
       if (btnToActive) {
-        btnToActive.classList.add('active')
-        btnToActive.setAttribute('aria-pressed', 'true')
+        btnToActive.classList.add('active');
+        btnToActive.setAttribute('aria-pressed', 'true');
       }
-      
-      // Icon visibility toggle
-      const lightIcon = document.querySelector('[data-lte-theme-icon="light"]')
-      const darkIcon = document.querySelector('[data-lte-theme-icon="dark"]')
-      const autoIcon = document.querySelector('[data-lte-theme-icon="auto"]')
+    };
 
-      if (lightIcon && darkIcon && autoIcon) {
-        lightIcon.classList.add('d-none')
-        darkIcon.classList.add('d-none')
-        autoIcon.classList.add('d-none')
-
-        if (theme === 'light') lightIcon.classList.remove('d-none')
-        else if (theme === 'dark') darkIcon.classList.remove('d-none')
-        else autoIcon.classList.remove('d-none')
-      }
-    }
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (storedTheme !== 'light' || storedTheme !== 'dark') {
-        setTheme(getPreferredTheme())
-      }
-    })
-
-    showActiveTheme(getPreferredTheme())
+    showActiveTheme(getPreferredTheme());
 
     document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
       toggle.addEventListener('click', () => {
-        const theme = toggle.getAttribute('data-bs-theme-value')
-        localStorage.setItem('theme', theme)
-        setTheme(theme)
-        showActiveTheme(theme, true)
-      })
-    })
-  })
+        const theme = toggle.getAttribute('data-bs-theme-value');
+        localStorage.setItem('theme', theme);
+        setTheme(theme);
+        showActiveTheme(theme);
+      });
+    });
+  });
 </script>
 
-
+<!-- Chart.js Script -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('batchChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: {!! json_encode($batchNames) !!},
-            datasets: [{
-                label: 'Number of Students',
-                data: {!! json_encode($studentCounts) !!},
-                backgroundColor: '#0d6efd',
-                borderRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('batchChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($batchNames) !!},
+                datasets: [{
+                    label: 'Number of Students',
+                    data: {!! json_encode($studentCounts) !!},
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
                 }
             }
-        }
+        });
     });
 </script>
 @endsection

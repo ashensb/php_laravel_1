@@ -78,20 +78,28 @@
                             <tbody>
                                 @forelse($batches as $batch)
                                     <tr>
-                                        <td class="ps-3 fw-semibold text-primary">{{ $batch->batch_name }}</td>
+                                        <!-- 1. Batch Name (DB column 'name' හෝ 'batch_name' ලෙස පැවතියද පෙන්වයි) -->
+                                        <td class="ps-3 fw-bold text-primary">
+                                            {{ $batch->name ?? $batch->batch_name }}
+                                        </td>
                                         <td>{{ $batch->course_name }}</td>
+                                        
+                                        
                                         <td>
                                             @if($batch->teacher)
-                                                <span class="badge bg-secondary-subtle text-dark border fw-medium">
+                                                <span class="badge bg-body-secondary text-body border fw-medium px-2 py-1">
                                                     <i class="bi bi-person-badge me-1"></i>{{ $batch->teacher->name }}
                                                 </span>
                                             @else
-                                                <span class="text-muted small">Not Assigned</span>
+                                                <span class="badge bg-secondary-subtle text-warning border border-warning-subtle px-2 py-1">
+                                                    Not Assigned
+                                                </span>
                                             @endif
                                         </td>
+                                        
                                         <td>{{ $batch->start_date ?? 'N/A' }}</td>
                                         <td>
-                                            <span class="badge bg-info-subtle text-info fw-bold fs-6">
+                                            <span class="badge bg-info-subtle text-info fw-bold fs-6 px-2 py-1">
                                                 {{ $batch->students_count }} Students
                                             </span>
                                         </td>

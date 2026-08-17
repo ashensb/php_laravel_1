@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // Register Page එක පෙන්වීමට
+    
     public function showRegister()
     {
         return view('auth.register');
     }
 
-    // Register Form එක Save කිරීමට
+   
     public function register(Request $request)
     {
         $request->validate([
@@ -35,13 +35,13 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Registration successful! Please login.');
     }
 
-    // Login Page එක පෙන්වීමට
+    
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // Login Logic එක (Role-Based Redirection)
+     (Role-Based Redirection)
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -68,7 +68,7 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    // Logout Logic එක
+    
     public function logout(Request $request)
     {
         Auth::logout();

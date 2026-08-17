@@ -11,30 +11,27 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // Dynamic Counts
         $totalStudents = Student::count();
-        $totalBatches  = Batch::count();
         $totalTeachers = Teacher::count();
+        $totalBatches = Batch::count();
 
-        $newThisMonth  = Student::whereMonth('created_at', now()->month)
-                                ->whereYear('created_at', now()->year)
-                                ->count();
-
+        // Tables සඳහා Data
         $recentStudents = Student::with('batch')->latest()->take(5)->get();
         $recentTeachers = Teacher::latest()->take(5)->get();
 
-        // Chart Data
+        // Chart Data (Batch table එකේ column name එක 'name' හෝ 'batch_name' අනුව පරීක්ෂා කරගන්න)
         $batches = Batch::withCount('students')->get();
-        $batchNames = $batches->pluck('batch_name');
+        $batchNames = $batches->pluck('name'); // ඔබේ DB එකේ තියෙන්නෙ 'batch_name' නම් මෙතන 'batch_name' ලෙස වෙනස් කරන්න
         $studentCounts = $batches->pluck('students_count');
 
         return view('admin.dashboard', compact(
             'totalStudents', 
-            'totalBatches', 
             'totalTeachers', 
-            'newThisMonth', 
+            'totalBatches', 
             'recentStudents', 
-            'recentTeachers', 
-            'batchNames', 
+            'recentTeachers',
+            'batchNames',
             'studentCounts'
         ));
     }

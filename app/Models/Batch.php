@@ -9,16 +9,22 @@ class Batch extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['batch_name', 'course_name', 'start_date'];
+    protected $fillable = [
+        'name',
+        'course_name',
+        'start_date',
+        'teacher_id',
+    ];
 
     // One batch has many students
     public function students()
     {
-        return $table = $this->hasMany(Student::class);
+        return $this->hasMany(Student::class);
     }
 
+    // Batch belongs to a teacher
     public function teacher()
-   {
-       return $this->belongsTo(Teacher::class);
-   }
+    {
+        return $this->belongsTo(Teacher::class);
+    }
 }
