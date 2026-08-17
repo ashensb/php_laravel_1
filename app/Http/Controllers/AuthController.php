@@ -15,7 +15,7 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-   
+    // Register Form save
     public function register(Request $request)
     {
         $request->validate([
@@ -35,13 +35,13 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Registration successful! Please login.');
     }
 
-    
+    // Login Page 
     public function showLogin()
     {
         return view('auth.login');
     }
 
-     (Role-Based Redirection)
+    // Login Logic  (Role-Based Redirection)
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -68,7 +68,7 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    
+    // Logout Logic 
     public function logout(Request $request)
     {
         Auth::logout();

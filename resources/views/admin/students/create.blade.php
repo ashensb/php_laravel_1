@@ -1,4 +1,4 @@
-@extends('app')
+@extends('component.app')
 
 @section('content')
 <div class="container-fluid px-4 py-3">

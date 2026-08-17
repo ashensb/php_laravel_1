@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Teacher;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class TeacherController extends Controller
 {
@@ -20,22 +22,24 @@ class TeacherController extends Controller
         ->latest()
         ->get();
 
-        return view('teachers.index', compact('teachers', 'search'));
+        return view('admin.teachers.index', compact('teachers', 'search'));
     }
 
     // 2. Load Teacher Registration Form
     public function create()
     {
-        return view('teachers.create');
+        return view('admin.teachers.create');
     }
 
-    // 3. Store Teacher Data
+    // 3. Store Teacher Data and Create Login User Account
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:teachers,email',
-            'phone' => 'nullable|string',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:teachers,email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'phone'    => 'nullable|string',
+            'image'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $imagePath = null;
@@ -43,6 +47,7 @@ class TeacherController extends Controller
             $imagePath = $request->file('image')->store('Teacher/Profile', 'public');
         }
 
+        // Teachers Table එකට එකතු කිරීම
         Teacher::create([
             'name'          => $request->name,
             'email'         => $request->email,
@@ -51,21 +56,29 @@ class TeacherController extends Controller
             'img'           => $imagePath,
         ]);
 
-        return redirect()->route('teacher.index')->with('success', 'Teacher registered successfully!');
+        // Teacher ට Log විය හැකි පරිදි Users Table එකේ Account එකක් සෑදීම
+        User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => 'teacher', // ඔබේ User Table එකේ role column එකක් ඇත්නම්
+        ]);
+
+        return redirect()->route('teacher.index')->with('success', 'Teacher registered and login account created successfully!');
     }
 
     // 4. Show Teacher Details Profile
     public function show($id)
     {
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.show', compact('teacher'));
+        return view('admin.teachers.show', compact('teacher'));
     }
 
     // 5. Edit Teacher Form
     public function edit($id)
     {
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.edit', compact('teacher'));
+        return view('admin.teachers.edit', compact('teacher'));
     }
 
     // 6. Update Teacher Data
@@ -76,6 +89,7 @@ class TeacherController extends Controller
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:teachers,email,' . $id,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = [
@@ -89,7 +103,17 @@ class TeacherController extends Controller
             $data['img'] = $request->file('image')->store('Teacher/Profile', 'public');
         }
 
+        // Teachers table එක Update කිරීම
         $teacher->update($data);
+
+        // Users table එකේ Email හෝ Name වෙනස් වුවහොත් එයද Update කිරීම
+        $user = User::where('email', $teacher->getOriginal('email'))->first();
+        if ($user) {
+            $user->update([
+                'name'  => $request->name,
+                'email' => $request->email,
+            ]);
+        }
 
         return redirect()->route('teacher.index')->with('success', 'Teacher details updated successfully!');
     }
@@ -98,6 +122,11 @@ class TeacherController extends Controller
     public function destroy($id)
     {
         $teacher = Teacher::findOrFail($id);
+        
+        // Users Table එකේ ඇති Account එකද Delete කිරීම
+        User::where('email', $teacher->email)->delete();
+
+        // Teachers Table එකෙන් Record එක Delete කිරීම
         $teacher->delete();
 
         return redirect()->route('teacher.index')->with('success', 'Teacher deleted successfully!');

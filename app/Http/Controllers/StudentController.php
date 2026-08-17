@@ -5,16 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Batch;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
     // 1. Display all students with search & batch relationship
     public function index(Request $request)
     {
-        // Search query parameter
         $search = $request->input('search');
 
-        // Build search query for Reg No, Name, or Email
         $students = Student::with('batch')
             ->when($search, function ($query, $search) {
                 return $query->where('reg_no', 'LIKE', "%{$search}%")
@@ -24,25 +24,38 @@ class StudentController extends Controller
             ->latest()
             ->get();
 
-        // Correct view name: students_list (.blade.php)
-        return view('students_list', compact('students', 'search'));
+        return view('admin.students.index', compact('students', 'search'));
     }
 
     // 2. Load student registration form with batches dropdown
     public function create() 
     {
         $batches = Batch::all();
-        return view("create", compact('batches'));
+        return view('admin.students.create', compact('batches'));
     }
 
-    // 3. Store new student details
+    // 3. Store new student details & create login user account
     public function store(Request $request) 
     {
         $imagePath = null;
+        
+        // Custom Image Upload Logic
         if ($request->hasFile('image')) {
-            $imagePath = ImageUpload::uploadImage($request->file('image'), 'Student/Profile');
+            $file = $request->file('image');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('storage/Student/Profile'), $fileName);
+            $imagePath = 'Student/Profile/' . $fileName;
         }
 
+        
+        User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password), // Password එක Encrypt කර Save කිරීම
+            'role'     => 'student', // Role එක student විදිහට Set කිරීම
+        ]);
+
+        
         Student::create([
             'reg_no'   => $request->reg_no,
             'name'     => $request->name,
@@ -54,7 +67,7 @@ class StudentController extends Controller
             'img'      => $imagePath,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Student registered successfully!');
+        return redirect()->route('student.index')->with('success', 'Student registered and User account created successfully!');
     }
 
     // 4. Load edit student page
@@ -62,10 +75,10 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
         $batches = Batch::all();
-        return view('edit_student', compact('student', 'batches'));
+        return view('admin.students.edit', compact('student', 'batches'));
     }
 
-    // 5. Update existing student details
+    // 5. Update existing student details & update user account email
     public function update(Request $request, $id) 
     {
         $student = Student::findOrFail($id);
@@ -81,29 +94,54 @@ class StudentController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $data['img'] = ImageUpload::uploadImage($request->file('image'), 'Student/Profile');
+            $file = $request->file('image');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('storage/Student/Profile'), $fileName);
+            $data['img'] = 'Student/Profile/' . $fileName;
         }
 
+        
+        $user = User::where('email', $student->email)->first();
+        if ($user) {
+            $userData = [
+                'name'  => $request->name,
+                'email' => $request->email,
+            ];
+            
+            
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($userData);
+        }
+
+       
         $student->update($data);
 
         return redirect()->route('student.index')->with('success', 'Student updated successfully!');
     }
 
-    // 6. Delete a student record
+    // 6. Delete a student record & user account
     public function destroy($id) 
     {
         $student = Student::findOrFail($id);
+
+        
+        $user = User::where('email', $student->email)->first();
+        if ($user) {
+            $user->delete();
+        }
+
         $student->delete();
 
         return redirect()->route('student.index')->with('success', 'Student deleted successfully!');
     }
 
-    // Student profile එක පෙන්වන function එක
-     public function show($id)
+    // 7. Student profile show function
+    public function show($id)
     {
-      // students and batch details load kirima..
-     $student = Student::with('batch')->findOrFail($id);
-    
-     return view('show_student', compact('student'));
+        $student = Student::with('batch')->findOrFail($id);
+        return view('admin.students.show', compact('student'));
     }
 }
