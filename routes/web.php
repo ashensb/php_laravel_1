@@ -6,6 +6,9 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StudentPortalController;
+use App\Http\Controllers\Admin\SubjectTeacherController;
+use App\Http\Middleware\RoleMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,5 +82,19 @@ Route::middleware('auth')->group(function () {
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Student Protected Route
+    Route::get('/student-portal', [StudentPortalController::class, 'index'])->name('student.portal');
+});
+
+// --------------------------------------------------------------------------
+// 3. Admin Protected Routes (Role Middleware භාවිතයෙන්)
+// --------------------------------------------------------------------------
+Route::middleware(['auth', RoleMiddleware::class . ':admin'])->prefix('admin')->group(function () {
     
+    // Assign Teacher to Subject Routes
+    Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
+    Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
+    Route::delete('/subject-teacher/{teacher}/{subject}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
+
 });

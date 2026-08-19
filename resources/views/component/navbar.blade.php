@@ -9,27 +9,32 @@
         </a>
       </li>
 
-      <li class="nav-item d-none d-md-block ms-2">
-        <a href="{{ route('dashboard') }}" class="nav-link fw-semibold">
-          <i class="bi bi-speedometer2 me-1 text-primary"></i> Dashboard
-        </a>
-      </li>
-      <li class="nav-item d-none d-md-block">
-        <a href="{{ route('student.register') }}" class="nav-link">
-          <i class="bi bi-person-plus me-1 text-success"></i> New Student
-        </a>
-      </li>
+      <!-- Admin-only Links -->
+      @if(Auth::check() && Auth::user()->role === 'admin')
+        <li class="nav-item d-none d-md-block ms-2">
+          <a href="{{ route('dashboard') }}" class="nav-link fw-semibold">
+            <i class="bi bi-speedometer2 me-1 text-primary"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item d-none d-md-block">
+          <a href="{{ route('student.register') }}" class="nav-link">
+            <i class="bi bi-person-plus me-1 text-success"></i> New Student
+          </a>
+        </li>
+      @endif
     </ul>
 
-    <!-- Center Search Bar -->
-    <form class="navbar-search d-none d-lg-block ms-auto me-auto" style="width: 300px;" role="search">
-      <div class="input-group input-group-sm">
-        <input type="search" class="form-control rounded-start-pill border-end-0 bg-body-tertiary" placeholder="Search students, batches..." aria-label="Search">
-        <button class="btn btn-outline-secondary rounded-end-pill border-start-0 bg-body-tertiary text-body-secondary" type="submit">
-          <i class="bi bi-search"></i>
-        </button>
-      </div>
-    </form>
+    <!-- Center Search Bar (Only Admin) -->
+    @if(Auth::check() && Auth::user()->role === 'admin')
+      <form class="navbar-search d-none d-lg-block ms-auto me-auto" style="width: 300px;" role="search">
+        <div class="input-group input-group-sm">
+          <input type="search" class="form-control rounded-start-pill border-end-0 bg-body-tertiary" placeholder="Search students, batches..." aria-label="Search">
+          <button class="btn btn-outline-secondary rounded-end-pill border-start-0 bg-body-tertiary text-body-secondary" type="submit">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+    @endif
 
     <!-- Right Navbar Links -->
     <ul class="navbar-nav ms-auto align-items-center">
@@ -99,13 +104,6 @@
           </li>
           <li><hr class="dropdown-divider my-1"></li>
           <li>
-            <a href="#" class="dropdown-item fs-7 py-2">
-              <i class="bi bi-person me-2 text-primary"></i> My Profile
-            </a>
-          </li>
-          <li><hr class="dropdown-divider my-1"></li>
-          <li>
-            <!-- Logout Action -->
             <form action="{{ route('logout') }}" method="POST" class="m-0">
               @csrf
               <button type="submit" class="dropdown-item fs-7 py-2 text-danger w-100 text-start border-0 bg-transparent">
