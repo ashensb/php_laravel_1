@@ -21,6 +21,150 @@
 @endpush
 
 @section('content')
+<style>
+    :root {
+        --db-bg: #0f1420;
+        --db-surface: #161c2b;
+        --db-surface-2: #1c2333;
+        --db-border: #2a3245;
+        --db-text: #e6e9f0;
+        --db-text-muted: #8891a5;
+        --db-accent-blue: #3b82f6;
+        --db-accent-violet: #8b5cf6;
+        --db-accent-green: #10b981;
+        --db-accent-amber: #f59e0b;
+    }
+
+    [data-bs-theme="dark"] .app-content, [data-bs-theme="dark"] body {
+        background-color: var(--db-bg);
+    }
+
+    /* Stat cards - flat surface with a colored left accent + icon chip, no loud gradients */
+    .stat-card {
+        background: var(--db-surface);
+        border: 1px solid var(--db-border);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.1rem 1.25rem;
+        position: relative;
+        overflow: hidden;
+        transition: border-color .15s ease, transform .15s ease;
+    }
+    .stat-card:hover { border-color: var(--db-accent-blue); transform: translateY(-2px); }
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+    }
+    .stat-card.accent-blue::before { background: var(--db-accent-blue); }
+    .stat-card.accent-violet::before { background: var(--db-accent-violet); }
+    .stat-card.accent-green::before { background: var(--db-accent-green); }
+    .stat-card.accent-amber::before { background: var(--db-accent-amber); }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+    .accent-blue .stat-icon { background: rgba(59,130,246,.12); color: var(--db-accent-blue); }
+    .accent-violet .stat-icon { background: rgba(139,92,246,.12); color: var(--db-accent-violet); }
+    .accent-green .stat-icon { background: rgba(16,185,129,.12); color: var(--db-accent-green); }
+    .accent-amber .stat-icon { background: rgba(245,158,11,.12); color: var(--db-accent-amber); }
+
+    .stat-label {
+        font-size: .72rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--db-text-muted);
+        font-weight: 600;
+        margin-bottom: .15rem;
+        display: block;
+    }
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--db-text);
+        line-height: 1;
+    }
+
+    .quick-action-btn {
+        border-radius: .5rem;
+        font-weight: 600;
+        font-size: .8rem;
+        padding: .4rem .7rem;
+        border: 1px solid var(--db-border);
+    }
+    .quick-action-btn.primary-action {
+        background: var(--db-accent-blue);
+        color: #fff;
+        border-color: var(--db-accent-blue);
+    }
+    .quick-action-btn.secondary-action {
+        background: transparent;
+        color: var(--db-text);
+    }
+    .quick-action-btn.secondary-action:hover { background: var(--db-surface-2); color: var(--db-text); }
+
+    /* Panels */
+    .panel-card {
+        background: var(--db-surface);
+        border: 1px solid var(--db-border);
+        border-radius: .75rem;
+    }
+    .panel-header {
+        background: transparent;
+        border-bottom: 1px solid var(--db-border);
+        padding: 1rem 1.25rem;
+    }
+    .panel-title {
+        color: var(--db-text);
+        font-weight: 600;
+        font-size: .95rem;
+        margin: 0;
+    }
+    .panel-title i { color: var(--db-accent-blue); }
+
+    .panel-table thead th {
+        background: var(--db-surface-2);
+        color: var(--db-text-muted);
+        font-size: .7rem;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-bottom: 1px solid var(--db-border);
+        padding: .7rem 1rem;
+    }
+    .panel-table tbody td {
+        color: var(--db-text);
+        border-bottom: 1px solid var(--db-border);
+        padding: .65rem 1rem;
+        font-size: .875rem;
+    }
+    .panel-table tbody tr:last-child td { border-bottom: none; }
+    .panel-table tbody tr:hover { background: var(--db-surface-2); }
+
+    .badge-soft {
+        font-weight: 600;
+        font-size: .72rem;
+        padding: .3rem .55rem;
+        border-radius: .4rem;
+    }
+    .badge-soft-blue { background: rgba(59,130,246,.12); color: #7fb3ff; border: 1px solid rgba(59,130,246,.25); }
+    .badge-soft-amber { background: rgba(245,158,11,.12); color: #f5c169; border: 1px solid rgba(245,158,11,.25); }
+    .badge-soft-violet { background: rgba(139,92,246,.12); color: #b39dfb; border: 1px solid rgba(139,92,246,.25); }
+
+    .link-muted { color: var(--db-accent-blue); font-size: .82rem; font-weight: 500; }
+    .link-muted:hover { color: #fff; }
+</style>
+
 <div class="container-fluid">
 
     {{-- Success Message Alert --}}
@@ -35,50 +179,46 @@
     <div class="row g-3 mb-4">
         <!-- Total Students Card -->
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box bg-primary text-white shadow-sm rounded-3">
-                <span class="info-box-icon bg-primary-subtle text-primary rounded-start-3"><i class="bi bi-people-fill fs-2"></i></span>
-                <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Total Students</span>
-                    <span class="info-box-number fs-3 fw-bold">{{ $totalStudents }}</span>
+            <div class="stat-card accent-blue">
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <span class="stat-label">Total Students</span>
+                    <span class="stat-value">{{ $totalStudents }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Total Teachers Card -->
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box text-white shadow-sm rounded-3" style="background-color: #6f42c1;">
-                <span class="info-box-icon bg-light text-dark rounded-start-3"><i class="bi bi-person-badge-fill fs-2"></i></span>
-                <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Total Teachers</span>
-                    <span class="info-box-number fs-3 fw-bold">{{ $totalTeachers }}</span>
+            <div class="stat-card accent-violet">
+                <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
+                <div>
+                    <span class="stat-label">Total Teachers</span>
+                    <span class="stat-value">{{ $totalTeachers }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Active Batches Card -->
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box bg-success text-white shadow-sm rounded-3">
-                <span class="info-box-icon bg-success-subtle text-success rounded-start-3"><i class="bi bi-journal-bookmark-fill fs-2"></i></span>
-                <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Active Batches</span>
-                    <span class="info-box-number fs-3 fw-bold">{{ $totalBatches }}</span>
+            <div class="stat-card accent-green">
+                <div class="stat-icon"><i class="bi bi-journal-bookmark-fill"></i></div>
+                <div>
+                    <span class="stat-label">Active Batches</span>
+                    <span class="stat-value">{{ $totalBatches }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Quick Register Action Card -->
         <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box bg-info text-white shadow-sm rounded-3">
-                <span class="info-box-icon bg-info-subtle text-info rounded-start-3"><i class="bi bi-lightning-charge-fill fs-2"></i></span>
-                <div class="info-box-content p-3">
-                    <span class="info-box-text text-uppercase fw-semibold text-white-50 small">Quick Actions</span>
-                    <div class="d-flex gap-1 mt-1">
-                        <a href="{{ route('student.register') }}" class="btn btn-light text-info fw-bold btn-sm">
-                            + Student
-                        </a>
-                        <a href="{{ route('teacher.create') }}" class="btn btn-dark fw-bold btn-sm">
-                            + Teacher
-                        </a>
+            <div class="stat-card accent-amber">
+                <div class="stat-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div class="flex-grow-1">
+                    <span class="stat-label">Quick Actions</span>
+                    <div class="d-flex gap-2 mt-1">
+                        <a href="{{ route('student.register') }}" class="quick-action-btn primary-action">+ Student</a>
+                        <a href="{{ route('teacher.create') }}" class="quick-action-btn secondary-action">+ Teacher</a>
                     </div>
                 </div>
             </div>
@@ -89,10 +229,10 @@
     <div class="row g-4 mb-4">
         <!-- Live Chart: Students per Batch -->
         <div class="col-md-6">
-            <div class="card shadow-sm border-0 rounded-3 h-100">
-                <div class="card-header bg-body-tertiary border-0 py-3">
-                    <h5 class="card-title fw-bold mb-0">
-                        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Students per Batch
+            <div class="panel-card h-100">
+                <div class="panel-header">
+                    <h5 class="panel-title">
+                        <i class="bi bi-bar-chart-fill me-2"></i>Students per Batch
                     </h5>
                 </div>
                 <div class="card-body">
@@ -103,19 +243,19 @@
 
         <!-- Live Table: Recent Student Registrations -->
         <div class="col-md-6">
-            <div class="card shadow-sm border-0 rounded-3 h-100">
-                <div class="card-header bg-body-tertiary border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title fw-bold mb-0">
-                        <i class="bi bi-clock-history me-2 text-warning"></i>Recent Students
+            <div class="panel-card h-100">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5 class="panel-title">
+                        <i class="bi bi-clock-history me-2"></i>Recent Students
                     </h5>
-                    <a href="{{ route('student.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+                    <a href="{{ route('student.index') }}" class="link-muted text-decoration-none">View All</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <table class="table panel-table align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <th class="ps-3">Reg No</th>
+                                    <th>Reg No</th>
                                     <th>Name</th>
                                     <th>Batch</th>
                                     <th>Date</th>
@@ -124,24 +264,22 @@
                             <tbody>
                                 @forelse($recentStudents as $student)
                                     <tr>
-                                        <td class="ps-3 fw-semibold text-primary">{{ $student->reg_no }}</td>
+                                        <td class="fw-semibold" style="color: var(--db-accent-blue);">{{ $student->reg_no }}</td>
                                         <td>{{ $student->name }}</td>
                                         <td>
                                             @if($student->batch)
-                                                <span class="badge bg-primary-subtle text-info border border-info-subtle px-2 py-1">
+                                                <span class="badge-soft badge-soft-blue">
                                                     {{ $student->batch->name ?? $student->batch->batch_name }}
                                                 </span>
                                             @else
-                                                <span class="badge bg-secondary-subtle text-warning border border-warning-subtle px-2 py-1">
-                                                    Not Assigned
-                                                </span>
+                                                <span class="badge-soft badge-soft-amber">Not Assigned</span>
                                             @endif
                                         </td>
-                                        <td class="small text-muted">{{ $student->created_at ? $student->created_at->format('Y-m-d') : 'N/A' }}</td>
+                                        <td class="small" style="color: var(--db-text-muted);">{{ $student->created_at ? $student->created_at->format('Y-m-d') : 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted py-4">No recent students found.</td>
+                                        <td colspan="4" class="text-center py-4" style="color: var(--db-text-muted);">No recent students found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -155,19 +293,19 @@
     <!-- Recently Joined Teachers Section -->
     <div class="row g-4">
         <div class="col-12">
-            <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-body-tertiary border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title fw-bold mb-0">
-                        <i class="bi bi-person-badge me-2" style="color: #6f42c1;"></i>Recently Joined Teachers
+            <div class="panel-card">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h5 class="panel-title">
+                        <i class="bi bi-person-badge me-2"></i>Recently Joined Teachers
                     </h5>
-                    <a href="{{ route('teacher.index') }}" class="btn btn-sm btn-link text-decoration-none">View All Teachers</a>
+                    <a href="{{ route('teacher.index') }}" class="link-muted text-decoration-none">View All Teachers</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <table class="table panel-table align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <th class="ps-3">Name</th>
+                                    <th>Name</th>
                                     <th>Email</th>
                                     <th>Qualification</th>
                                     <th>Joined Date</th>
@@ -176,18 +314,18 @@
                             <tbody>
                                 @forelse($recentTeachers as $teacher)
                                     <tr>
-                                        <td class="ps-3 fw-semibold">{{ $teacher->name }}</td>
+                                        <td class="fw-semibold">{{ $teacher->name }}</td>
                                         <td>{{ $teacher->email }}</td>
                                         <td>
-                                          <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-2 py-1">
+                                          <span class="badge-soft badge-soft-violet">
                                               {{ $teacher->qualification ?? 'Lecturer' }}
                                            </span>
                                         </td>
-                                        <td class="small text-muted">{{ $teacher->created_at ? $teacher->created_at->format('Y-m-d') : 'N/A' }}</td>
+                                        <td class="small" style="color: var(--db-text-muted);">{{ $teacher->created_at ? $teacher->created_at->format('Y-m-d') : 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted py-4">No teachers registered yet.</td>
+                                        <td colspan="4" class="text-center py-4" style="color: var(--db-text-muted);">No teachers registered yet.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -266,16 +404,25 @@
                 datasets: [{
                     label: 'Number of Students',
                     data: {!! json_encode($studentCounts) !!},
-                    backgroundColor: '#0d6efd',
-                    borderRadius: 5
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6,
+                    maxBarThickness: 46
                 }]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    legend: { labels: { color: '#8891a5' } }
+                },
                 scales: {
+                    x: {
+                        ticks: { color: '#8891a5' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1 }
+                        ticks: { stepSize: 1, color: '#8891a5' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
                     }
                 }
             }

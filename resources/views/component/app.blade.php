@@ -1,40 +1,43 @@
-@include('component.head')
+<!doctype html>
+<html lang="en">
+<head>
+    @include('component.head')
+</head>
 
-<!--begin::App Wrapper-->
-<div class="app-wrapper">
-    <!--begin::Header-->
-    @include('component.navbar')
-    <!--end::Header-->
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 
-    <!--begin::Sidebar-->
-    @include('component.sidebar')
-    <!--end::Sidebar-->
+    <!--begin::App Wrapper-->
+    <div class="app-wrapper">
+        <!--begin::Header-->
+        @include('component.navbar')
+        <!--end::Header-->
 
-    <!--begin::App Main-->
-    <main class="app-main">
-        
-        <!-- Render page header dynamically using stack -->
-        @stack('header')
+        <!--begin::Sidebar-->
+        @include('component.sidebar')
+        <!--end::Sidebar-->
 
-        <!--begin::App Content-->
-        <div class="app-content">
-            <!--begin::Container-->
-            <div class="container-fluid">
+        <!--begin::App Main-->
+        <main class="app-main">
+            @stack('header')
 
-                @yield('content')
-
+            <!--begin::App Content-->
+            <div class="app-content">
+                <div class="container-fluid">
+                    @yield('content')
+                </div>
             </div>
-            <!--end::Container-->
-        </div>
-        <!--end::App Content-->
-    </main>
-    <!--end::App Main-->
+            <!--end::App Content-->
+        </main>
+        <!--end::App Main-->
 
-    <!--begin::Footer-->
-    @include('component.footer')
-    <!--end::Footer-->
-</div>
-<!--end::App Wrapper-->
+        <!--begin::Footer-->
+        @include('component.footer')
+        <!--end::Footer-->
+    </div>
+    <!--end::App Wrapper-->
 
-<!--begin::Script-->
-@include('component.script')
+    <!--begin::Script-->
+    @include('component.script')
+
+</body>
+</html>
