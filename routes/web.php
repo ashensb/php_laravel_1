@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\Admin\SubjectTeacherController;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Controllers\Admin\SubjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,4 +98,24 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])->prefix('admin')->
     Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
     Route::delete('/subject-teacher/{teacher}/{subject}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
 
+});
+
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    // Subject Routes
+    Route::get('/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
+    Route::post('/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
+    Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
+});
+
+
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+   
+
+    // Assign Subjects Routes
+    Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
+    Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
+    Route::delete('/subject-teacher/{teacherId}/{subjectId}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
+    
+    // Course එකට අදාළ Subjects AJAX හරහා ගැනීමට
+    Route::get('/get-subjects-by-course/{courseId}', [SubjectTeacherController::class, 'getSubjectsByCourse']);
 });
