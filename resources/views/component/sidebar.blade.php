@@ -92,6 +92,16 @@
                         </a>
                     </li>
 
+                    <!-- Subject Management (New) -->
+                    <li class="nav-item mb-1">
+                        <a href="{{ route('admin.subjects.index') }}"
+                           class="nav-link rounded-3"
+                           style="color:{{ request()->routeIs('admin.subjects.*') ? '#0284c7' : '#4b5563' }}; background:{{ request()->routeIs('admin.subjects.*') ? '#e0f2fe' : 'transparent' }}; font-weight:{{ request()->routeIs('admin.subjects.*') ? '600' : '500' }};">
+                            <i class="nav-icon bi bi-journal-plus" style="color:{{ request()->routeIs('admin.subjects.*') ? '#0284c7' : '#8a93a3' }};"></i>
+                            <p>Subject Management</p>
+                        </a>
+                    </li>
+
                     <!-- Assign Subjects -->
                     <li class="nav-item mb-1">
                         <a href="{{ route('admin.subject-teacher.index') }}"

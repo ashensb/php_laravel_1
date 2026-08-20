@@ -3,43 +3,75 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Teacher;
-use App\Models\Subject;
+use App\Models\Batch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SubjectTeacherController extends Controller
 {
-    // Assignment Page එක පෙන්වීම
-   public function index()
-   {
-    $teachers = Teacher::with(['user', 'subjects'])->get();
-    $subjects = Subject::all();
+    public function index()
+    {
+        // කෙළින්ම teachers table එකෙන් විතරක් Data ලබා ගැනීම
+        $teachers = DB::table('teachers')
+            ->select('id', 'name', 'qualification')
+            ->get();
 
-    return view('admin.subject_teacher.index', compact('teachers', 'subjects'));
-   }  
+        $courses = Batch::select('id', 'course_name')->get();
 
-    // Subject එකක් Teacher ට Assign කිරීම
+        // Assign කර ඇති Subjects details ලබා ගැනීම
+        foreach ($teachers as $teacher) {
+            $teacher->assigned_subjects = DB::table('subject_teacher')
+                ->join('course_subjects', 'subject_teacher.subject_id', '=', 'course_subjects.id')
+                ->where('subject_teacher.teacher_id', $teacher->id) // teacher_id භාවිත කර ඇත
+                ->select('course_subjects.id', 'course_subjects.subject_name', 'course_subjects.subject_code')
+                ->get();
+        }
+
+        return view('admin.subject_teacher.index', compact('teachers', 'courses'));
+    }
+
+    public function getSubjectsByCourse($courseId)
+    {
+        $subjects = DB::table('course_subjects')
+            ->where('course_id', $courseId)
+            ->select('id', 'subject_name', 'subject_code')
+            ->get();
+
+        return response()->json($subjects);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
-            'subject_id' => 'required|exists:course_subjects,id',
+            'teacher_id' => 'required',
+            'subject_id' => 'required',
         ]);
 
-        $teacher = Teacher::findOrFail($request->teacher_id);
-        
-        // එකම Subject එක දෙපාරක් Assign වීම වැළැක්වීමට (syncWithoutDetaching)
-        $teacher->subjects()->syncWithoutDetaching([$request->subject_id]);
+        $exists = DB::table('subject_teacher')
+            ->where('teacher_id', $request->teacher_id)
+            ->where('subject_id', $request->subject_id)
+            ->exists();
 
-        return redirect()->back()->with('success', 'Subject assigned to teacher successfully!');
+        if (!$exists) {
+            DB::table('subject_teacher')->insert([
+                'teacher_id' => $request->teacher_id,
+                'subject_id' => $request->subject_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return redirect()->back()->with('success', 'Subject assigned to teacher successfully!');
+        }
+
+        return redirect()->back()->with('error', 'This subject is already assigned to the teacher!');
     }
 
-    // Assigned Subject එකක් ඉවත් කිරීම (Remove)
     public function destroy($teacherId, $subjectId)
     {
-        $teacher = Teacher::findOrFail($teacherId);
-        $teacher->subjects()->detach($subjectId);
+        DB::table('subject_teacher')
+            ->where('teacher_id', $teacherId)
+            ->where('subject_id', $subjectId)
+            ->delete();
 
-        return redirect()->back()->with('success', 'Subject removed from teacher successfully!');
+        return redirect()->back()->with('success', 'Assignment removed successfully!');
     }
 }
