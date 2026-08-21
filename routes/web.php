@@ -10,6 +10,7 @@ use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\Admin\SubjectTeacherController;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\ExamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +18,7 @@ use App\Http\Controllers\Admin\SubjectController;
 |--------------------------------------------------------------------------
 */
 
-// Root URL එකට එන අයව Login Page එකට Redirect කිරීම
+// Root URL redirection
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -39,15 +40,13 @@ Route::middleware('guest')->group(function () {
 // --------------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
 
-    // Admin Dashboard
+    // Dashboards
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Student Dashboard
     Route::get('/student-dashboard', function () {
         return view('student.dashboard');
     })->name('student.dashboard');
 
-    // Teacher Dashboard
     Route::get('/teacher-dashboard', function () {
         return view('teacher.dashboard');
     })->name('teacher.dashboard');
@@ -81,41 +80,48 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [TeacherController::class, 'destroy'])->name('teacher.destroy');
     });
 
+    // Student Portal Route
+    Route::get('/student-portal', [StudentPortalController::class, 'index'])->name('student.portal');
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    // Student Protected Route
-    Route::get('/student-portal', [StudentPortalController::class, 'index'])->name('student.portal');
 });
 
 // --------------------------------------------------------------------------
-// 3. Admin Protected Routes (Role Middleware භාවිතයෙන්)
+// 3. Admin Protected Routes
 // --------------------------------------------------------------------------
-Route::middleware(['auth', RoleMiddleware::class . ':admin'])->prefix('admin')->group(function () {
-    
-    // Assign Teacher to Subject Routes
-    Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
-    Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
-    Route::delete('/subject-teacher/{teacher}/{subject}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
-
-});
-
 Route::prefix('admin')->middleware(['auth'])->group(function () {
+    
+    // Admin Only Routes (RoleMiddleware)
+    Route::middleware([RoleMiddleware::class . ':admin'])->group(function () {
+        Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
+        Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
+        Route::delete('/subject-teacher/{teacherId}/{subjectId}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
+    });
+
     // Subject Routes
     Route::get('/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
     Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
+
+    // Course එකට අදාළ Subjects AJAX Route
+    Route::get('/get-subjects-by-course/{courseId}', [SubjectTeacherController::class, 'getSubjectsByCourse']);
 });
 
-
-Route::prefix('admin')->middleware(['auth'])->group(function () {
-   
-
-    // Assign Subjects Routes
-    Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
-    Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
-    Route::delete('/subject-teacher/{teacherId}/{subjectId}', [SubjectTeacherController::class, 'destroy'])->name('admin.subject-teacher.destroy');
+// --------------------------------------------------------------------------
+// 4. Teacher Protected Routes (Exams & MCQ Management)
+// --------------------------------------------------------------------------
+Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
+    Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
+    Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
+    Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     
-    // Course එකට අදාළ Subjects AJAX හරහා ගැනීමට
-    Route::get('/get-subjects-by-course/{courseId}', [SubjectTeacherController::class, 'getSubjectsByCourse']);
+    // MCQ Questions Management
+    Route::get('/exams/{id}/questions', [ExamController::class, 'questions'])->name('exams.questions');
+    Route::post('/exams/{id}/questions', [ExamController::class, "storeQuestion"])->name('exams.questions.store');
+    Route::delete('/questions/{id}', [ExamController::class, 'destroyQuestion'])->name('exams.questions.destroy');
+
+    // Exam Management (Publish Toggle & Delete)
+    Route::patch('/exams/{id}/toggle-publish', [ExamController::class, 'togglePublish'])->name('exams.toggle-publish');
+    Route::delete('/exams/{id}', [ExamController::class, 'destroy'])->name('exams.destroy');
 });

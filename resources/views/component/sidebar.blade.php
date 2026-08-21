@@ -1,6 +1,6 @@
 <aside class="app-sidebar shadow-sm" data-bs-theme="light" style="background:#ffffff; border-right:1px solid #eef0f4;">
     <div class="sidebar-brand" style="border-bottom:1px solid #eef0f4;">
-        <a href="{{ Auth::user()->role === 'admin' ? route('dashboard') : route('student.portal') }}" class="brand-link">
+        <a href="{{ Auth::user()->role === 'admin' ? route('dashboard') : (Auth::user()->role === 'teacher' ? route('teacher.dashboard') : route('student.portal')) }}" class="brand-link">
             <span class="brand-text fw-bold" style="color:#1e2530;">
                 <i class="bi bi-mortarboard-fill me-2" style="color:#2563eb;"></i>Student Management
             </span>
@@ -92,7 +92,7 @@
                         </a>
                     </li>
 
-                    <!-- Subject Management (New) -->
+                    <!-- Subject Management -->
                     <li class="nav-item mb-1">
                         <a href="{{ route('admin.subjects.index') }}"
                            class="nav-link rounded-3"
@@ -136,24 +136,13 @@
                         </a>
                     </li>
 
-                    <li class="nav-item mb-1">
-                        <a href="#" class="nav-link rounded-3" style="color:#4b5563; font-weight:500;">
-                            <i class="nav-icon bi bi-journal-bookmark-fill" style="color:#8a93a3;"></i>
-                            <p>My Batches</p>
-                        </a>
-                    </li>
 
                     <li class="nav-item mb-1">
-                        <a href="#" class="nav-link rounded-3" style="color:#4b5563; font-weight:500;">
-                            <i class="nav-icon bi bi-people-fill" style="color:#8a93a3;"></i>
-                            <p>My Students</p>
-                        </a>
-                    </li>
-
-                    <li class="nav-item mb-1">
-                        <a href="#" class="nav-link rounded-3" style="color:#4b5563; font-weight:500;">
-                            <i class="nav-icon bi bi-check2-square" style="color:#8a93a3;"></i>
-                            <p>Attendance</p>
+                        <a href="{{ Route::has('teacher.exams.index') ? route('teacher.exams.index') : '#' }}" 
+                           class="nav-link rounded-3" 
+                           style="color:{{ request()->routeIs('teacher.exams.*') ? '#2563eb' : '#4b5563' }}; background:{{ request()->routeIs('teacher.exams.*') ? '#eaf1ff' : 'transparent' }}; font-weight:{{ request()->routeIs('teacher.exams.*') ? '600' : '500' }};">
+                            <i class="nav-icon bi bi-file-earmark-text-fill" style="color:{{ request()->routeIs('teacher.exams.*') ? '#2563eb' : '#8a93a3' }};"></i>
+                            <p>Exams & Quizzes</p>
                         </a>
                     </li>
 

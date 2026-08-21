@@ -11,11 +11,7 @@ class McqQuestion extends Model
 
     protected $fillable = ['exam_id', 'question', 'marks'];
 
-    public function exam()
-    {
-        return $this->belongsTo(Exam::class);
-    }
-
+    // Relation with MCQ Options
     public function options()
     {
         return $this->hasMany(McqOption::class, 'mcq_question_id');

@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Batch;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -37,6 +38,19 @@ class StudentController extends Controller
     // 3. Store new student details & create login user account
     public function store(Request $request) 
     {
+        // Validation Rules
+        $request->validate([
+            'reg_no'    => 'required|unique:students,reg_no',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email|unique:students,email',
+            'password'  => 'required|min:4',
+            'batch_id'  => 'required|exists:batches,id',
+            'image'     => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'email.unique'  => 'මෙම Email ලිපිනය දැනටමත් පද්ධතියේ ලියාපදිංචි කර ඇත.',
+            'reg_no.unique' => 'මෙම Reg No එක දැනටමත් පද්ධතියේ ඇත.',
+        ]);
+
         $imagePath = null;
         
         // Custom Image Upload Logic
@@ -47,25 +61,31 @@ class StudentController extends Controller
             $imagePath = 'Student/Profile/' . $fileName;
         }
 
-        
-        User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password), // Password එක Encrypt කර Save කිරීම
-            'role'     => 'student', // Role එක student විදිහට Set කිරීම
-        ]);
+        // Batch එක හරහා අදාළ course_id එක ගෙන ඒම
+        $batch = Batch::find($request->batch_id);
+        $courseId = $batch ? $batch->course_id : null;
 
-        
-        Student::create([
-            'reg_no'   => $request->reg_no,
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'dob'      => $request->dob,
-            'age'      => $request->age,
-            'password' => $request->password,
-            'batch_id' => $request->batch_id,
-            'img'      => $imagePath,
-        ]);
+        // DB Transaction මගින් User සහ Student create කිරීම
+        DB::transaction(function () use ($request, $imagePath, $courseId) {
+            User::create([
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'role'     => 'student',
+            ]);
+
+            Student::create([
+                'reg_no'    => $request->reg_no,
+                'name'      => $request->name,
+                'email'     => $request->email,
+                'dob'       => $request->dob,
+                'age'       => $request->age,
+                'password'  => $request->password,
+                'batch_id'  => $request->batch_id,
+                'course_id' => $courseId, // course_id එක මෙතනදී save වේ
+                'img'       => $imagePath,
+            ]);
+        });
 
         return redirect()->route('student.index')->with('success', 'Student registered and User account created successfully!');
     }
@@ -83,14 +103,18 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
 
+        $batch = Batch::find($request->batch_id);
+        $courseId = $batch ? $batch->course_id : null;
+
         $data = [
-            'reg_no'   => $request->reg_no,
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'dob'      => $request->dob,
-            'age'      => $request->age,
-            'password' => $request->password,
-            'batch_id' => $request->batch_id,
+            'reg_no'    => $request->reg_no,
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'dob'       => $request->dob,
+            'age'       => $request->age,
+            'password'  => $request->password,
+            'batch_id'  => $request->batch_id,
+            'course_id' => $courseId,
         ];
 
         if ($request->hasFile('image')) {
@@ -100,14 +124,12 @@ class StudentController extends Controller
             $data['img'] = 'Student/Profile/' . $fileName;
         }
 
-        
         $user = User::where('email', $student->email)->first();
         if ($user) {
             $userData = [
                 'name'  => $request->name,
                 'email' => $request->email,
             ];
-            
             
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
@@ -116,7 +138,6 @@ class StudentController extends Controller
             $user->update($userData);
         }
 
-       
         $student->update($data);
 
         return redirect()->route('student.index')->with('success', 'Student updated successfully!');
@@ -127,7 +148,6 @@ class StudentController extends Controller
     {
         $student = Student::findOrFail($id);
 
-        
         $user = User::where('email', $student->email)->first();
         if ($user) {
             $user->delete();
