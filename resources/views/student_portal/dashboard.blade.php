@@ -18,8 +18,8 @@
     </div>
 
     @if(!$student)
-        <div class="rounded-4 p-3 shadow-sm" style="background:#2a2210; border:1px solid #4d3d16; color:#facc15;">
-            Your student profile details were not found in the system. Please contact Admin.
+        <div class="rounded-4 p-3 shadow-sm mb-4" style="background:#2a2210; border:1px solid #4d3d16; color:#facc15;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Your student profile details were not found in the system. Please contact Admin.
         </div>
     @else
         <!-- Top Cards Overview -->
@@ -44,11 +44,57 @@
                 <div class="rounded-4 shadow-sm p-3" style="background:linear-gradient(135deg,#0f2b1e 0%,#161a22 100%); border-left:4px solid #22c55e;">
                     <small class="text-uppercase fw-bold" style="letter-spacing:.5px; color:#4ade80;">Registration Info</small>
                     <h4 class="fw-bold mb-0 mt-1" style="color:#f1f3f7;">Reg No: {{ $student->reg_no ?? 'N/A' }}</h4>
-                    <small style="color:#8b93a1;">Joined: {{ $student->created_at->format('Y-m-d') }}</small>
+                    <small style="color:#8b93a1;">Joined: {{ $student->created_at ? $student->created_at->format('Y-m-d') : 'N/A' }}</small>
                 </div>
             </div>
         </div>
 
+        <!-- Available Exams & Assignments Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="rounded-4 shadow-sm" style="background:#161a22; border:1px solid #23262f; overflow:hidden;">
+                    <div class="fw-bold py-3 px-3 d-flex justify-content-between align-items-center" style="background:#1a1e27; color:#f1f3f7; border-bottom:1px solid #23262f;">
+                        <span><i class="bi bi-journal-check me-2" style="color:#60a5fa;"></i>Active Exams & Assignments</span>
+                        <span class="badge rounded-pill bg-primary">{{ $exams->count() }} Available</span>
+                    </div>
+                    <div class="p-3">
+                        <div class="row g-3">
+                            @forelse($exams as $exam)
+                                <div class="col-md-4">
+                                    <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background:#0f1115; border:1px solid #2b303b;">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge text-uppercase" style="background-color: {{ $exam->type === 'mcq' ? '#1e3a8a' : '#581c87' }}; color:#ffffff;">
+                                                    {{ strtoupper($exam->type) }}
+                                                </span>
+                                                <small class="fw-bold" style="color:#60a5fa;">{{ $exam->subject->subject_code ?? '' }}</small>
+                                            </div>
+                                            <h5 class="fw-bold mb-1" style="color:#f1f3f7;">{{ $exam->title }}</h5>
+                                            <p class="small mb-2" style="color:#8b93a1;">Subject: {{ $exam->subject->subject_name ?? 'N/A' }}</p>
+                                            <div class="small mb-3" style="color:#6b7280;">
+                                                <div><i class="bi bi-award me-1"></i> Total Marks: {{ $exam->total_marks }}</div>
+                                                @if($exam->end_time)
+                                                    <div><i class="bi bi-clock me-1"></i> Deadline: {{ \Carbon\Carbon::parse($exam->end_time)->format('Y-m-d H:i') }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <a href="#" class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#2563eb; color:#ffffff; border:none;">
+                                            Attempt Now
+                                        </a>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-12 text-center py-4">
+                                    <p class="mb-0" style="color:#6b7280;">No published exams or assignments currently available for your subjects.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Profile Details & Batch Mates Section -->
         <div class="row g-4">
             <!-- Student Profile Information -->
             <div class="col-md-4">

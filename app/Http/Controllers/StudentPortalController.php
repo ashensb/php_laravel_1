@@ -3,34 +3,55 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
+use App\Models\Exam;
+use Illuminate\Support\Facades\DB;
 
 class StudentPortalController extends Controller
 {
     public function index()
     {
-        // Log වී සිටින User ගේ Email එක ලබාගැනීම
-        $loggedUserEmail = Auth::user()->email;
+        $user = Auth::user();
 
-        // Email එකට අදාළ Student Record එක Batch, Teacher සහ Batch Mates විස්තරත් එක්කම Load කිරීම
-        $student = Student::with(['batch.teacher', 'batch.students'])
-                    ->where('email', $loggedUserEmail)
-                    ->first();
+        // 1. Logged-in student profile
+        $student = Student::with('batch')->where('email', $user->email)->first();
 
-        // Student Table එකේ Record එකක් නොතිබුණොත් Empty Data යැවීම
         if (!$student) {
             return view('student_portal.dashboard', [
                 'student' => null,
                 'batch' => null,
+                'exams' => collect(),
                 'batchMates' => collect()
             ]);
         }
 
         $batch = $student->batch;
-        // එකම Batch එකේ සිටින අනෙක් Students ලා (තමන් හැර)
-        $batchMates = $batch ? $batch->students->where('id', '!=', $student->id) : collect();
+        $exams = collect();
 
-        return view('student_portal.dashboard', compact('student', 'batch', 'batchMates'));
+        if ($batch) {
+            // 2. Batch එකේ course_id එකෙන් Direct filter කිරීම
+            // (ඔබේ batch table එකේ course ID එක සඳහන් වන්නේ course_id ලෙසද නැතහොත් id ලෙසද යන්න අනුව ($batch->course_id ?? $batch->id) යොදන්න)
+            $targetCourseId = $batch->course_id ?? $batch->id;
+
+            $courseSubjectIds = DB::table('course_subjects')
+                ->where('course_id', $targetCourseId)
+                ->pluck('id')
+                ->toArray();
+
+            // 3. Published Exams Fetch කිරීම
+            if (!empty($courseSubjectIds)) {
+                $exams = Exam::whereIn('course_subject_id', $courseSubjectIds)
+                    ->where('is_published', 1)
+                    ->get();
+            }
+        }
+
+        // Batch Mates
+        $batchMates = Student::where('batch_id', $student->batch_id)
+            ->where('id', '!=', $student->id)
+            ->get();
+
+        return view('student_portal.dashboard', compact('student', 'batch', 'exams', 'batchMates'));
     }
 }

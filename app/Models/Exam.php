@@ -5,20 +5,40 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Teacher extends Model
+class Exam extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'reg_no', 'qualification', 'phone'];
+    protected $fillable = [
+        'course_subject_id', // DB column name එක
+        'created_by',
+        'title',
+        'instructions',
+        'type',
+        'start_time',
+        'end_time',
+        'total_marks',
+        'is_published',
+    ];
 
-    public function user()
+    // Foreign key එක 'course_subject_id' ලෙස explicitly සඳහන් කරන්න
+    // public function subject()
+    // {
+    //     return $this->belongsTo(Subject::class, 'course_subject_id');
+    // }
+
+    public function questions()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(McqQuestion::class, 'exam_id');
     }
 
-    // Teacher කෙනෙකුට Subjects කිහිපයක් උගන්වන්න පුළුවන්
-    public function subjects()
+    public function submissions()
     {
-        return $this->belongsToMany(Subject::class, 'subject_teacher', 'teacher_id', 'subject_id');
+        return $this->hasMany(ExamSubmission::class, 'exam_id');
     }
+
+    public function subject()
+   {
+    return $this->belongsTo(Subject::class);
+   }
 }

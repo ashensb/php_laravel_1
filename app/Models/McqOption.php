@@ -11,6 +11,7 @@ class McqOption extends Model
 
     protected $fillable = ['mcq_question_id', 'option_text', 'is_correct'];
 
+    // Relation with MCQ Question
     public function question()
     {
         return $this->belongsTo(McqQuestion::class, 'mcq_question_id');

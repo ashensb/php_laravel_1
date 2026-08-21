@@ -27,4 +27,9 @@ class Batch extends Model
     {
         return $this->belongsTo(Teacher::class);
     }
+
+    public function subjects()
+  {
+    return $this->belongsToMany(Subject::class, 'batches');
+  }
 }
