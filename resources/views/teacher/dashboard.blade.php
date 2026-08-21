@@ -21,7 +21,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase fw-bold mb-1" style="letter-spacing:.5px; color:#60a5fa;">Assigned Batches</h6>
-                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">02</h2>
+                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">{{ str_pad($assignedBatchesCount, 2, '0', STR_PAD_LEFT) }}</h2>
                     </div>
                     <i class="bi bi-journal-bookmark fs-1" style="color:#3b82f6; opacity:.3;"></i>
                 </div>
@@ -33,7 +33,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase fw-bold mb-1" style="letter-spacing:.5px; color:#c084fc;">Total Students</h6>
-                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">45</h2>
+                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">{{ $totalStudentsCount }}</h2>
                     </div>
                     <i class="bi bi-people fs-1" style="color:#a855f7; opacity:.3;"></i>
                 </div>
@@ -45,7 +45,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase fw-bold mb-1" style="letter-spacing:.5px; color:#4ade80;">Active Modules</h6>
-                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">04</h2>
+                        <h2 class="fw-bold mb-0" style="color:#f1f3f7;">{{ str_pad($activeModulesCount, 2, '0', STR_PAD_LEFT) }}</h2>
                     </div>
                     <i class="bi bi-book fs-1" style="color:#22c55e; opacity:.3;"></i>
                 </div>
@@ -67,28 +67,26 @@
                             <thead>
                                 <tr style="background-color:#1a1e27;">
                                     <th class="ps-3 small text-uppercase fw-bold py-3" style="letter-spacing:.5px; color:#6b7280;">Batch Name</th>
-                                    <th class="small text-uppercase fw-bold py-3" style="letter-spacing:.5px; color:#6b7280;">Course</th>
+                                    <th class="small text-uppercase fw-bold py-3" style="letter-spacing:.5px; color:#6b7280;">Course / Subject</th>
                                     <th class="small text-uppercase fw-bold py-3" style="letter-spacing:.5px; color:#6b7280;">Students</th>
                                     <th class="small text-uppercase fw-bold py-3 pe-3" style="letter-spacing:.5px; color:#6b7280;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="ps-3 fw-semibold" style="color:#f1f3f7;">Batch 01</td>
-                                    <td style="color:#8b93a1;">Full Stack Web Development</td>
-                                    <td><span class="badge" style="background-color:#23262f; color:#c7ccd6;">25</span></td>
-                                    <td class="pe-3">
-                                        <button class="btn btn-sm" style="border:1px solid #3b82f6; color:#60a5fa; background:transparent;">View Students</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-3 fw-semibold" style="color:#f1f3f7;">Batch 02</td>
-                                    <td style="color:#8b93a1;">Mobile Application Development</td>
-                                    <td><span class="badge" style="background-color:#23262f; color:#c7ccd6;">20</span></td>
-                                    <td class="pe-3">
-                                        <button class="btn btn-sm" style="border:1px solid #3b82f6; color:#60a5fa; background:transparent;">View Students</button>
-                                    </td>
-                                </tr>
+                                @forelse($batches as $batch)
+                                    <tr>
+                                        <td class="ps-3 fw-semibold" style="color:#f1f3f7;">{{ $batch->name ?? $batch->batch_name }}</td>
+                                        <td style="color:#8b93a1;">{{ $batch->course_name ?? 'General Course' }}</td>
+                                        <td><span class="badge" style="background-color:#23262f; color:#c7ccd6;">{{ $batch->students_count ?? 0 }}</span></td>
+                                        <td class="pe-3">
+                                            <a href="#" class="btn btn-sm" style="border:1px solid #3b82f6; color:#60a5fa; background:transparent;">View Students</a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4" style="color:#8b93a1;">No assigned batches found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -113,7 +111,7 @@
                     </div>
                     <div class="mb-0">
                         <small class="d-block mb-1" style="color:#6b7280;">Role</small>
-                        <span class="badge text-capitalize px-2 py-1" style="background-color:#0891b2; color:#ecfeff;">{{ Auth::user()->role }}</span>
+                        <span class="badge text-capitalize px-2 py-1" style="background-color:#0891b2; color:#ecfeff;">{{ Auth::user()->role ?? 'Teacher' }}</span>
                     </div>
                 </div>
             </div>

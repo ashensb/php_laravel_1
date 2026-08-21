@@ -8,9 +8,10 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\Admin\SubjectTeacherController;
-use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\TeacherPortalController;
+use App\Http\Middleware\RoleMiddleware;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,9 +48,8 @@ Route::middleware('auth')->group(function () {
         return view('student.dashboard');
     })->name('student.dashboard');
 
-    Route::get('/teacher-dashboard', function () {
-        return view('teacher.dashboard');
-    })->name('teacher.dashboard');
+    // Teacher Dashboard - Controller එක හරහා Dynamic Data Load වේ
+    Route::get('/teacher-dashboard', [TeacherPortalController::class, 'dashboard'])->name('teacher.dashboard');
 
     // Student Management
     Route::prefix('students')->group(function () {
@@ -109,16 +109,17 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
 });
 
 // --------------------------------------------------------------------------
-// 4. Teacher Protected Routes (Exams & MCQ Management)
+// 4. Teacher Protected Routes (Dashboard, Exams & MCQ Management)
 // --------------------------------------------------------------------------
 Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
+    Route::get('/dashboard', [TeacherPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     
     // MCQ Questions Management
     Route::get('/exams/{id}/questions', [ExamController::class, 'questions'])->name('exams.questions');
-    Route::post('/exams/{id}/questions', [ExamController::class, "storeQuestion"])->name('exams.questions.store');
+    Route::post('/exams/{id}/questions', [ExamController::class, 'storeQuestion'])->name('exams.questions.store');
     Route::delete('/questions/{id}', [ExamController::class, 'destroyQuestion'])->name('exams.questions.destroy');
 
     // Exam Management (Publish Toggle & Delete)
