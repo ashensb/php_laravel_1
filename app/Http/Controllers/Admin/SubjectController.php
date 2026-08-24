@@ -11,10 +11,10 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        // Batch Table එකෙන් Courses ලැයිස්තුව ගැනීම
+        // Batch Table recive courses
         $courses = Batch::select('id', 'course_name')->get();
 
-        // Database එකේ ඇති Subjects ලැයිස්තුව Course එකත් සමඟ ගැනීම
+        // recive subject and coursess through database
         $subjects = DB::table('course_subjects')
             ->join('batches', 'course_subjects.course_id', '=', 'batches.id')
             ->select('course_subjects.*', 'batches.course_name')

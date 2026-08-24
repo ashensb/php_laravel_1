@@ -8,6 +8,7 @@ use App\Models\Batch;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentController extends Controller
 {
@@ -61,11 +62,11 @@ class StudentController extends Controller
             $imagePath = 'Student/Profile/' . $fileName;
         }
 
-        // Batch එක හරහා අදාළ course_id එක ගෙන ඒම
+        // Fetching the relevant course_id through the batch
         $batch = Batch::find($request->batch_id);
         $courseId = $batch ? $batch->course_id : null;
 
-        // DB Transaction මගින් User සහ Student create කිරීම
+        // Creating User and Student through DB Transaction
         DB::transaction(function () use ($request, $imagePath, $courseId) {
             User::create([
                 'name'     => $request->name,
@@ -82,7 +83,7 @@ class StudentController extends Controller
                 'age'       => $request->age,
                 'password'  => $request->password,
                 'batch_id'  => $request->batch_id,
-                'course_id' => $courseId, // course_id එක මෙතනදී save වේ
+                'course_id' => $courseId,
                 'img'       => $imagePath,
             ]);
         });
@@ -163,5 +164,24 @@ class StudentController extends Controller
     {
         $student = Student::with('batch')->findOrFail($id);
         return view('admin.students.show', compact('student'));
+    }
+
+    // 8. Export filtered students to PDF
+    public function exportPdf(Request $request)
+    {
+        $query = Student::query();
+
+        // Filtering if there is a search query in the UI
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('reg_no', 'LIKE', "%{$search}%");
+        }
+
+        $students = $query->get();
+
+        $pdf = Pdf::loadView('reports.students-pdf', compact('students'));
+        return $pdf->download('student-list.pdf');
     }
 }

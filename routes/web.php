@@ -19,7 +19,7 @@ use App\Http\Middleware\RoleMiddleware;
 |--------------------------------------------------------------------------
 */
 
-// Root URL redirection
+// Root URL Redirections
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -27,7 +27,7 @@ Route::get('/', function () {
 Route::redirect('/home', '/admin/dashboard');
 
 // --------------------------------------------------------------------------
-// 1. Guest Routes (Login නොවුණු අය සඳහා පමණයි)
+// 1. Guest Routes
 // --------------------------------------------------------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -37,23 +37,22 @@ Route::middleware('guest')->group(function () {
 });
 
 // --------------------------------------------------------------------------
-// 2. Authenticated Routes (Login වූ අය සඳහා පමණයි)
+// 2. Authenticated General Routes
 // --------------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
 
     // Dashboards
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/student-dashboard', function () {
-        return view('student.dashboard');
-    })->name('student.dashboard');
+    // Fixed: Folder name corrected to student_portal.dashboard
+    Route::get('/student-dashboard', [StudentPortalController::class, 'index'])->name('student.dashboard');
 
-    // Teacher Dashboard - Controller එක හරහා Dynamic Data Load වේ
     Route::get('/teacher-dashboard', [TeacherPortalController::class, 'dashboard'])->name('teacher.dashboard');
 
     // Student Management
     Route::prefix('students')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('student.index');
+        Route::get('/export-pdf', [StudentController::class, 'exportPdf'])->name('students.export-pdf');
         Route::get('/create', [StudentController::class, 'create'])->name('student.register');
         Route::post('/store', [StudentController::class, 'store'])->name('student.store');
         Route::get('/{id}', [StudentController::class, 'show'])->name('student.show');
@@ -72,6 +71,7 @@ Route::middleware('auth')->group(function () {
     // Teacher Management
     Route::prefix('teachers')->group(function () {
         Route::get('/', [TeacherController::class, 'index'])->name('teacher.index');
+        Route::get('/export-pdf', [TeacherController::class, 'exportPdf'])->name('teachers.export-pdf');
         Route::get('/create', [TeacherController::class, 'create'])->name('teacher.create');
         Route::post('/store', [TeacherController::class, 'store'])->name('teacher.store');
         Route::get('/{id}', [TeacherController::class, 'show'])->name('teacher.show');
@@ -80,8 +80,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [TeacherController::class, 'destroy'])->name('teacher.destroy');
     });
 
-    // Student Portal Route
+    // Student Portal & Exam Routes
     Route::get('/student-portal', [StudentPortalController::class, 'index'])->name('student.portal');
+    Route::get('/student/exam/{id}', [StudentPortalController::class, 'showExam'])->name('student.exam.show');
+    Route::post('/student/exam/{examId}/submit', [StudentPortalController::class, 'submitExam'])->name('student.exam.submit');
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -92,7 +94,7 @@ Route::middleware('auth')->group(function () {
 // --------------------------------------------------------------------------
 Route::prefix('admin')->middleware(['auth'])->group(function () {
     
-    // Admin Only Routes (RoleMiddleware)
+    // Admin Only Routes
     Route::middleware([RoleMiddleware::class . ':admin'])->group(function () {
         Route::get('/subject-teacher', [SubjectTeacherController::class, 'index'])->name('admin.subject-teacher.index');
         Route::post('/subject-teacher', [SubjectTeacherController::class, 'store'])->name('admin.subject-teacher.store');
@@ -104,25 +106,30 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
     Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
 
-    // Course එකට අදාළ Subjects AJAX Route
+    // Course Subjects AJAX Route
     Route::get('/get-subjects-by-course/{courseId}', [SubjectTeacherController::class, 'getSubjectsByCourse']);
 });
 
 // --------------------------------------------------------------------------
-// 4. Teacher Protected Routes (Dashboard, Exams & MCQ Management)
+// 4. Teacher Protected Routes
 // --------------------------------------------------------------------------
 Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
-    
+    Route::get('/submissions', [TeacherPortalController::class, 'submissions'])->name('submissions');
+    Route::get('/submissions/{id}', [TeacherPortalController::class, 'showSubmission'])->name('submissions.show');
+    Route::post('/submissions/{id}/grade', [TeacherPortalController::class, 'gradeSubmission'])->name('submissions.grade');
+    Route::put('/submissions/{id}', [TeacherController::class, 'updateGrade'])->name('teacher.submissions.update');
+
     // MCQ Questions Management
     Route::get('/exams/{id}/questions', [ExamController::class, 'questions'])->name('exams.questions');
     Route::post('/exams/{id}/questions', [ExamController::class, 'storeQuestion'])->name('exams.questions.store');
     Route::delete('/questions/{id}', [ExamController::class, 'destroyQuestion'])->name('exams.questions.destroy');
 
-    // Exam Management (Publish Toggle & Delete)
+    // Exam Management
     Route::patch('/exams/{id}/toggle-publish', [ExamController::class, 'togglePublish'])->name('exams.toggle-publish');
     Route::delete('/exams/{id}', [ExamController::class, 'destroy'])->name('exams.destroy');
 });
+

@@ -146,6 +146,12 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a href="{{ route('teacher.submissions') }}" class="nav-link style-link">
+                           <i class="bi bi-file-earmark-check me-2"></i> Exam Submissions
+                        </a>
+                    </li>
+
                 @endif
 
             </ul>

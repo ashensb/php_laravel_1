@@ -17,6 +17,36 @@
         </form>
     </div>
 
+    <!-- Success Message Alert -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 d-flex align-items-center justify-content-between" role="alert" style="background-color: #064e3b; color: #34d399; border: 1px solid #059669;">
+            <div>
+                <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Error Message Alert -->
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 d-flex align-items-center justify-content-between" role="alert" style="background-color: #451a1a; color: #f87171; border: 1px solid #991b1b;">
+            <div>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Warning Message Alert -->
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show rounded-3 mb-4 d-flex align-items-center justify-content-between" role="alert" style="background-color: #453008; color: #facc15; border: 1px solid #854d0e;">
+            <div>
+                <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('warning') }}
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     @if(!$student)
         <div class="rounded-4 p-3 shadow-sm mb-4" style="background:#2a2210; border:1px solid #4d3d16; color:#facc15;">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> Your student profile details were not found in the system. Please contact Admin.
@@ -60,6 +90,10 @@
                     <div class="p-3">
                         <div class="row g-3">
                             @forelse($exams as $exam)
+                                @php
+                                    $hasSubmitted = isset($submissions[$exam->id]);
+                                    $submission = $submissions[$exam->id] ?? null;
+                                @endphp
                                 <div class="col-md-4">
                                     <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background:#0f1115; border:1px solid #2b303b;">
                                         <div>
@@ -67,7 +101,11 @@
                                                 <span class="badge text-uppercase" style="background-color: {{ $exam->type === 'mcq' ? '#1e3a8a' : '#581c87' }}; color:#ffffff;">
                                                     {{ strtoupper($exam->type) }}
                                                 </span>
-                                                <small class="fw-bold" style="color:#60a5fa;">{{ $exam->subject->subject_code ?? '' }}</small>
+                                                @if($hasSubmitted)
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Submitted</span>
+                                                @else
+                                                    <small class="fw-bold" style="color:#60a5fa;">{{ $exam->subject->subject_code ?? '' }}</small>
+                                                @endif
                                             </div>
                                             <h5 class="fw-bold mb-1" style="color:#f1f3f7;">{{ $exam->title }}</h5>
                                             <p class="small mb-2" style="color:#8b93a1;">Subject: {{ $exam->subject->subject_name ?? 'N/A' }}</p>
@@ -76,11 +114,24 @@
                                                 @if($exam->end_time)
                                                     <div><i class="bi bi-clock me-1"></i> Deadline: {{ \Carbon\Carbon::parse($exam->end_time)->format('Y-m-d H:i') }}</div>
                                                 @endif
+                                                @if($hasSubmitted)
+                                                    <div class="text-info mt-1 font-weight-bold">
+                                                        <i class="bi bi-star-fill me-1"></i> Score Obtained: 
+                                                        {{ $submission->score ?? 'Pending Grade' }} / {{ $exam->total_marks }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
-                                        <a href="#" class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#2563eb; color:#ffffff; border:none;">
-                                            Attempt Now
-                                        </a>
+
+                                        @if($hasSubmitted)
+                                            <button class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#1e293b; color:#94a3b8; border:1px solid #334155;" disabled>
+                                                Completed
+                                            </button>
+                                        @else
+                                            <a href="{{ Route::has('student.exam.show') ? route('student.exam.show', $exam->id) : '#' }}" class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#2563eb; color:#ffffff; border:none;">
+                                                Attempt Now
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @empty
@@ -96,7 +147,6 @@
 
         <!-- Student Profile Details & Batch Mates Section -->
         <div class="row g-4">
-            <!-- Student Profile Information -->
             <div class="col-md-4">
                 <div class="rounded-4 shadow-sm h-100" style="background:#161a22; border:1px solid #23262f; overflow:hidden;">
                     <div class="fw-bold py-3 px-3" style="background:#1a1e27; color:#f1f3f7; border-bottom:1px solid #23262f;">
@@ -123,7 +173,6 @@
                 </div>
             </div>
 
-            <!-- Batch Mates List Table -->
             <div class="col-md-8">
                 <div class="rounded-4 shadow-sm h-100" style="background:#161a22; border:1px solid #23262f; overflow:hidden;">
                     <div class="fw-bold py-3 px-3" style="background:#1a1e27; color:#f1f3f7; border-bottom:1px solid #23262f;">

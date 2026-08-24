@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TeacherController extends Controller
 {
@@ -47,7 +48,7 @@ class TeacherController extends Controller
             $imagePath = $request->file('image')->store('Teacher/Profile', 'public');
         }
 
-        // Teachers Table එකට එකතු කිරීම
+        // adding Teachers Table 
         Teacher::create([
             'name'          => $request->name,
             'email'         => $request->email,
@@ -56,12 +57,12 @@ class TeacherController extends Controller
             'img'           => $imagePath,
         ]);
 
-        // Teacher ට Log විය හැකි පරිදි Users Table එකේ Account එකක් සෑදීම
+        // Creating an account in the Users table so that the teacher can log in
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'teacher', // ඔබේ User Table එකේ role column එකක් ඇත්නම්
+            'role'     => 'teacher',
         ]);
 
         return redirect()->route('teacher.index')->with('success', 'Teacher registered and login account created successfully!');
@@ -103,10 +104,10 @@ class TeacherController extends Controller
             $data['img'] = $request->file('image')->store('Teacher/Profile', 'public');
         }
 
-        // Teachers table එක Update කිරීම
+        // Updating the Teachers table
         $teacher->update($data);
 
-        // Users table එකේ Email හෝ Name වෙනස් වුවහොත් එයද Update කිරීම
+        // If the email or name in the users table changes, update it as well.
         $user = User::where('email', $teacher->getOriginal('email'))->first();
         if ($user) {
             $user->update([
@@ -123,12 +124,31 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::findOrFail($id);
         
-        // Users Table එකේ ඇති Account එකද Delete කිරීම
+        // Deleting the account in the Users table
         User::where('email', $teacher->email)->delete();
 
-        // Teachers Table එකෙන් Record එක Delete කිරීම
+        // Deleting a record from the Teachers table
         $teacher->delete();
 
         return redirect()->route('teacher.index')->with('success', 'Teacher deleted successfully!');
+    }
+
+    // 8. Export filtered teachers to PDF
+    public function exportPdf(Request $request)
+    {
+        $query = Teacher::query();
+
+        // Filtering if there is a search query in the UI
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('qualification', 'LIKE', "%{$search}%");
+        }
+
+        $teachers = $query->get();
+
+        $pdf = Pdf::loadView('reports.teachers-pdf', compact('teachers'));
+        return $pdf->download('teacher-list.pdf');
     }
 }

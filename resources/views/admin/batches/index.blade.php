@@ -78,7 +78,7 @@
                             <tbody>
                                 @forelse($batches as $batch)
                                     <tr>
-                                        <!-- 1. Batch Name (DB column 'name' හෝ 'batch_name' ලෙස පැවතියද පෙන්වයි) -->
+                                        <!-- 1. Batch Name  -->
                                         <td class="ps-3 fw-bold text-primary">
                                             {{ $batch->name ?? $batch->batch_name }}
                                         </td>
