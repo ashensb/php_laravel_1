@@ -136,9 +136,9 @@
                                         </div>
 
                                         @if($hasSubmitted)
-                                            <button class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#1e293b; color:#94a3b8; border:1px solid #334155;" disabled>
-                                                Completed
-                                            </button>
+                                            <a href="{{ Route::has('student.exam.result') ? route('student.exam.result', $exam->id) : '#' }}" class="btn btn-sm w-100 mt-2 fw-semibold d-flex justify-content-center align-items-center" style="background-color:#1e293b; color:#60a5fa; border:1px solid #3b82f6;">
+                                                <i class="bi bi-eye me-1"></i> View Results & Review
+                                            </a>
                                         @else
                                             <a href="{{ Route::has('student.exam.show') ? route('student.exam.show', $exam->id) : '#' }}" class="btn btn-sm w-100 mt-2 fw-semibold" style="background-color:#2563eb; color:#ffffff; border:none;">
                                                 Attempt Now

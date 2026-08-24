@@ -80,9 +80,13 @@ Route::middleware('auth')->group(function () {
     });
 
     // Student Portal & Exam Routes
-    Route::get('/student-portal', [StudentPortalController::class, 'index'])->name('student.portal');
-    Route::get('/student/exam/{id}', [StudentPortalController::class, 'showExam'])->name('student.exam.show');
-    Route::post('/student/exam/{examId}/submit', [StudentPortalController::class, 'submitExam'])->name('student.exam.submit');
+  Route::prefix('student')->name('student.')->group(function () {
+    Route::get('/dashboard', [StudentPortalController::class, 'index'])->name('dashboard');
+    Route::get('/portal', [StudentPortalController::class, 'index'])->name('portal');
+    Route::get('/exam/{id}', [StudentPortalController::class, 'showExam'])->name('exam.show');
+    Route::post('/exam/{examId}/submit', [StudentPortalController::class, 'submitExam'])->name('exam.submit');
+    Route::get('/exam/{id}/result', [StudentPortalController::class, 'viewResult'])->name('exam.result');
+   });
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -14,6 +14,8 @@ class StudentPortalController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        // Email එක හරහා Student record එක සොයා ගැනීම
         $student = Student::where('email', $user->email)->first();
 
         if (!$student) {
@@ -28,9 +30,9 @@ class StudentPortalController extends Controller
 
         $batch = $student->batch;
 
-        // Show all published exams to the student
-        // (No direct batch→subject→exam relationship exists in the current schema)
-        $exams = Exam::where('is_published', true)
+        // Published exams සියල්ල Load කිරීම (Subject relationship එකත් සමග)
+        $exams = Exam::with('subject')
+            ->where('is_published', true)
             ->latest()
             ->get();
 
@@ -39,7 +41,7 @@ class StudentPortalController extends Controller
             ->get()
             ->keyBy('exam_id');
 
-        // Batch mates
+        // Batch mates සොයා ගැනීම
         $batchMates = Student::where('batch_id', $student->batch_id)
             ->where('id', '!=', $student->id)
             ->get();
@@ -99,5 +101,31 @@ class StudentPortalController extends Controller
 
         return redirect()->route('student.dashboard')
             ->with('success', 'Exam submitted successfully!');
+    }
+
+    public function viewResult($examId)
+    {
+        $user = Auth::user();
+        
+        // Auth::user()->student වෙනුවට email එකෙන් student සොයාගැනීම (Error එක වැලැක්වීමට)
+        $student = Student::where('email', $user->email)->first();
+
+        if (!$student) {
+            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
+        }
+
+        $submission = ExamSubmission::with([
+            'exam.questions.options',
+            'exam.subject'
+        ])
+        ->where('exam_id', $examId)
+        ->where('student_id', $student->id)
+        ->firstOrFail();
+
+        $studentAnswers = is_string($submission->answers) 
+            ? json_decode($submission->answers, true) 
+            : ($submission->answers ?? []);
+
+        return view('student_portal.exam_result', compact('submission', 'studentAnswers'));
     }
 }
