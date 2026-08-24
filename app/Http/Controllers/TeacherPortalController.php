@@ -168,7 +168,7 @@ class TeacherPortalController extends Controller
     $submission->status = 'graded'; // Status එක graded ලෙස update කිරීම
     $submission->save();
 
-    return redirect()->route('teacher.submissions.index')
+    return redirect()->route('teacher.submissions')
         ->with('success', 'Grade & Feedback published successfully!');
   }
 }

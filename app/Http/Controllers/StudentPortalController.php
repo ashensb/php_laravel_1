@@ -28,10 +28,9 @@ class StudentPortalController extends Controller
 
         $batch = $student->batch;
 
-        // BATCH FILTER එක සහ PUBLISHED CHECK එක රිලැක්ස් කර සියලුම EXAMS FETCH කිරීම (Debug Mode)
-        // ඔබගේ DATABASE එකේ EXAM එකෙහි batch_id එක වෙනස් වුවද මෙය හරහා පෙන්නුම් කරයි
-        $exams = Exam::where('batch_id', $student->batch_id)
-            ->orWhereNull('batch_id') // batch_id assign කර නැතිනම්
+        // Show all published exams to the student
+        // (No direct batch→subject→exam relationship exists in the current schema)
+        $exams = Exam::where('is_published', true)
             ->latest()
             ->get();
 

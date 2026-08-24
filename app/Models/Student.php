@@ -17,7 +17,8 @@ class Student extends Model
         'age', 
         'password', 
         'img', 
-        'batch_id'
+        'batch_id',
+        'course_id',
     ];
 
     // Student belongs to a single batch

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
    {
     Schema::table('exam_submissions', function (Blueprint $table) {
-        $table->json('answers')->nullable()->after('student_id');
+        // Column already defined in base create migration
     });
    }
 

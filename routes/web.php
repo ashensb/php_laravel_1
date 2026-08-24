@@ -47,7 +47,6 @@ Route::middleware('auth')->group(function () {
     // Fixed: Folder name corrected to student_portal.dashboard
     Route::get('/student-dashboard', [StudentPortalController::class, 'index'])->name('student.dashboard');
 
-    Route::get('/teacher-dashboard', [TeacherPortalController::class, 'dashboard'])->name('teacher.dashboard');
 
     // Student Management
     Route::prefix('students')->group(function () {
@@ -121,7 +120,7 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::get('/submissions', [TeacherPortalController::class, 'submissions'])->name('submissions');
     Route::get('/submissions/{id}', [TeacherPortalController::class, 'showSubmission'])->name('submissions.show');
     Route::post('/submissions/{id}/grade', [TeacherPortalController::class, 'gradeSubmission'])->name('submissions.grade');
-    Route::put('/submissions/{id}', [TeacherController::class, 'updateGrade'])->name('teacher.submissions.update');
+    Route::put('/submissions/{id}', [TeacherController::class, 'updateGrade'])->name('submissions.update');
 
     // MCQ Questions Management
     Route::get('/exams/{id}/questions', [ExamController::class, 'questions'])->name('exams.questions');

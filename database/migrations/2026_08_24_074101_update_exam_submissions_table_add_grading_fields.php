@@ -9,10 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('exam_submissions', function (Blueprint $table) {
-            $table->integer('total_score')->nullable()->after('score');
-            $table->integer('max_score')->nullable()->after('total_score');
-            $table->text('teacher_feedback')->nullable()->after('submitted_at');
-            $table->timestamp('graded_at')->nullable()->after('teacher_feedback');
+            // Columns already defined in base create migration
         });
     }
 

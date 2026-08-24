@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('reg_no');
             $table->string('name');
             $table->string('email')->unique();
-            $table->date('dob');
-            $table->integer('age');
+            $table->date('dob')->nullable();
+            $table->integer('age')->nullable();
             $table->string('password');
-            $table->string('img');
+            $table->string('img')->nullable();
             $table->timestamps();
         });
     }
