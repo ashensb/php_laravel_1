@@ -93,6 +93,7 @@
                                 @php
                                     $hasSubmitted = isset($submissions[$exam->id]);
                                     $submission = $submissions[$exam->id] ?? null;
+                                    $feedbackText = $submission->feedback ?? $submission->teacher_feedback ?? null;
                                 @endphp
                                 <div class="col-md-4">
                                     <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background:#0f1115; border:1px solid #2b303b;">
@@ -115,10 +116,21 @@
                                                     <div><i class="bi bi-clock me-1"></i> Deadline: {{ \Carbon\Carbon::parse($exam->end_time)->format('Y-m-d H:i') }}</div>
                                                 @endif
                                                 @if($hasSubmitted)
-                                                    <div class="text-info mt-1 font-weight-bold">
+                                                    <div class="text-info mt-2 font-weight-bold">
                                                         <i class="bi bi-star-fill me-1"></i> Score Obtained: 
                                                         {{ $submission->score ?? 'Pending Grade' }} / {{ $exam->total_marks }}
                                                     </div>
+
+                                                    @if(!empty($feedbackText))
+                                                        <div class="mt-2 p-2 rounded" style="background-color: #1a2332; border-left: 3px solid #60a5fa;">
+                                                            <small class="d-block fw-bold" style="color: #60a5fa;">
+                                                                <i class="bi bi-chat-left-text me-1"></i> Teacher's Feedback:
+                                                            </small>
+                                                            <small style="color: #e5e7eb; font-style: italic;">
+                                                                "{{ $feedbackText }}"
+                                                            </small>
+                                                        </div>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
