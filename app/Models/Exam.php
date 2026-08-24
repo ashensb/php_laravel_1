@@ -10,7 +10,7 @@ class Exam extends Model
     use HasFactory;
 
     protected $fillable = [
-        'course_subject_id', // DB column name එක
+        'course_subject_id', // DB column name 
         'created_by',
         'title',
         'instructions',
@@ -21,16 +21,12 @@ class Exam extends Model
         'is_published',
     ];
 
-    // Foreign key එක 'course_subject_id' ලෙස explicitly සඳහන් කරන්න
-    // public function subject()
-    // {
-    //     return $this->belongsTo(Subject::class, 'course_subject_id');
-    // }
+   
 
-    public function questions()
-    {
-        return $this->hasMany(McqQuestion::class, 'exam_id');
-    }
+   public function questions()
+   {
+    return $this->hasMany(McqQuestion::class, 'exam_id');
+   }
 
     public function submissions()
     {
@@ -39,6 +35,8 @@ class Exam extends Model
 
     public function subject()
    {
-    return $this->belongsTo(Subject::class);
+    return $this->belongsTo(Subject::class, 'course_subject_id');
    }
+
+   
 }

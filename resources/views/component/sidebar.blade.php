@@ -29,7 +29,7 @@
                         <a href="#" class="nav-link rounded-3" style="color:#4b5563; font-weight:500;">
                             <i class="nav-icon bi bi-people-fill" style="color:#8a93a3;"></i>
                             <p>
-                                Student Management
+                                Student Managment
                                 <i class="nav-arrow bi bi-chevron-right"></i>
                             </p>
                         </a>
@@ -58,7 +58,7 @@
                         <a href="#" class="nav-link rounded-3" style="color:#4b5563; font-weight:500;">
                             <i class="nav-icon bi bi-person-badge-fill" style="color:#8a93a3;"></i>
                             <p>
-                                Teacher Management
+                                Teacher Managment
                                 <i class="nav-arrow bi bi-chevron-right"></i>
                             </p>
                         </a>
@@ -143,6 +143,12 @@
                            style="color:{{ request()->routeIs('teacher.exams.*') ? '#2563eb' : '#4b5563' }}; background:{{ request()->routeIs('teacher.exams.*') ? '#eaf1ff' : 'transparent' }}; font-weight:{{ request()->routeIs('teacher.exams.*') ? '600' : '500' }};">
                             <i class="nav-icon bi bi-file-earmark-text-fill" style="color:{{ request()->routeIs('teacher.exams.*') ? '#2563eb' : '#8a93a3' }};"></i>
                             <p>Exams & Quizzes</p>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('teacher.submissions') }}" class="nav-link style-link">
+                           <i class="bi bi-file-earmark-check me-2"></i> Exam Submissions
                         </a>
                     </li>
 

@@ -11,6 +11,13 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    <div>
+       <a href="{{ route('teachers.export-pdf', ['search' => request('search')]) }}" class="btn btn-danger ms-2">
+         <i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF
+       </a>
+
+    </div>
+
     <!-- Search Bar -->
     <div class="row mb-3 align-items-center">
         <div class="col-md-6 ms-auto">

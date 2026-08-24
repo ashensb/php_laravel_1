@@ -10,6 +10,11 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    <div>
+        <a href="{{ route('students.export-pdf', ['search' => request('search')]) }}"    class="btn btn-danger ms-2">
+         <i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF
+      </a>
+    </div>
 
     <!-- Search Bar Component -->
 <div class="row mb-3 align-items-center">

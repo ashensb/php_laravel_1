@@ -25,7 +25,7 @@
                     @enderror
                 </div>
 
-                <!-- Teacher Login සදහා Password Field එක -->
+                <!-- Teacher Login  Password Field  -->
                 <div class="mb-3">
                     <label class="form-label">Password *</label>
                     <input type="password" name="password" class="form-control" placeholder="Enter password for teacher login" required minlength="6">

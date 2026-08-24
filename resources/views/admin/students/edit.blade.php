@@ -26,7 +26,7 @@
         </div>
 
         <div class="card-body p-4">
-            <!-- enctype="multipart/form-data" එකතු කිරීම වැදගත් වේ -->
+            <!-- enctype="multipart/form-data"  -->
             <form action="{{ route('student.update', $student->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')

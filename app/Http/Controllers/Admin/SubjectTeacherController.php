@@ -11,18 +11,18 @@ class SubjectTeacherController extends Controller
 {
     public function index()
     {
-        // කෙළින්ම teachers table එකෙන් විතරක් Data ලබා ගැනීම
+        // recive data only teacher table
         $teachers = DB::table('teachers')
             ->select('id', 'name', 'qualification')
             ->get();
 
         $courses = Batch::select('id', 'course_name')->get();
 
-        // Assign කර ඇති Subjects details ලබා ගැනීම
+        // Getting details of assigned subjects
         foreach ($teachers as $teacher) {
             $teacher->assigned_subjects = DB::table('subject_teacher')
                 ->join('course_subjects', 'subject_teacher.subject_id', '=', 'course_subjects.id')
-                ->where('subject_teacher.teacher_id', $teacher->id) // teacher_id භාවිත කර ඇත
+                ->where('subject_teacher.teacher_id', $teacher->id) // using teacher_id 
                 ->select('course_subjects.id', 'course_subjects.subject_name', 'course_subjects.subject_code')
                 ->get();
         }

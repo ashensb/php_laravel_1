@@ -119,7 +119,7 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         
-        // Associated questions and options delete කිරීම
+        // Deleting associated questions and options
         foreach ($exam->questions as $question) {
             $question->options()->delete();
             $question->delete();

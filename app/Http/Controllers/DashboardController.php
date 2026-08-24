@@ -16,13 +16,13 @@ class DashboardController extends Controller
         $totalTeachers = Teacher::count();
         $totalBatches = Batch::count();
 
-        // Tables සඳහා Data
+        // Data for tables
         $recentStudents = Student::with('batch')->latest()->take(5)->get();
         $recentTeachers = Teacher::latest()->take(5)->get();
 
-        // Chart Data (Batch table එකේ column name එක 'name' හෝ 'batch_name' අනුව පරීක්ෂා කරගන්න)
+        // Chart Data (Check the column name of the batch table as 'name' or 'batch_name')
         $batches = Batch::withCount('students')->get();
-        $batchNames = $batches->pluck('name'); // ඔබේ DB එකේ තියෙන්නෙ 'batch_name' නම් මෙතන 'batch_name' ලෙස වෙනස් කරන්න
+        $batchNames = $batches->pluck('name'); 
         $studentCounts = $batches->pluck('students_count');
 
         return view('admin.dashboard', compact(

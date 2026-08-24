@@ -10,8 +10,22 @@ class ExamSubmission extends Model
     use HasFactory;
 
     protected $fillable = [
-        'exam_id', 'student_id', 'answers', 
-        'file_path', 'marks_obtained', 'feedback', 'submitted_at'
+        'exam_id',
+        'student_id',
+        'answers',
+        'score',
+        'total_score',
+        'max_score',
+        'status',
+        'submitted_at',
+        'teacher_feedback',
+        'feedback',
+        'marks_obtained',
+        'graded_at',
+    ];
+
+    protected $casts = [
+        'answers' => 'array',
     ];
 
     public function exam()
@@ -21,6 +35,6 @@ class ExamSubmission extends Model
 
     public function student()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'student_id');
     }
 }

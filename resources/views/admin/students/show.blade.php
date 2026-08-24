@@ -1,4 +1,4 @@
-@extends('component.app') {{-- ඔයාගේ Master Layout එකේ නම (app/dashboard) යොදන්න --}}
+@extends('component.app') {{-- MASTER LAYOUT --}}
 
 @section('content')
 <div class="container-fluid py-4">
