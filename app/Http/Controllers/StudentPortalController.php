@@ -103,29 +103,42 @@ class StudentPortalController extends Controller
             ->with('success', 'Exam submitted successfully!');
     }
 
-    public function viewResult($examId)
-    {
-        $user = Auth::user();
-        
-        // Auth::user()->student වෙනුවට email එකෙන් student සොයාගැනීම (Error එක වැලැක්වීමට)
-        $student = Student::where('email', $user->email)->first();
+   public function viewResult($examId)
+   {
+    $user = Auth::user();
+    $student = Student::where('email', $user->email)->first();
 
-        if (!$student) {
-            return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
-        }
-
-        $submission = ExamSubmission::with([
-            'exam.questions.options',
-            'exam.subject'
-        ])
-        ->where('exam_id', $examId)
-        ->where('student_id', $student->id)
-        ->firstOrFail();
-
-        $studentAnswers = is_string($submission->answers) 
-            ? json_decode($submission->answers, true) 
-            : ($submission->answers ?? []);
-
-        return view('student_portal.exam_result', compact('submission', 'studentAnswers'));
+    if (!$student) {
+        return redirect()->route('student.dashboard')->with('error', 'Student profile not found.');
     }
+
+    $submission = ExamSubmission::with([
+        'exam.questions.options',
+        'exam.subject'
+    ])
+    ->where('exam_id', $examId)
+    ->where('student_id', $student->id)
+    ->firstOrFail();
+
+    $studentAnswers = is_string($submission->answers) 
+        ? json_decode($submission->answers, true) 
+        : ($submission->answers ?? []);
+
+    // Automatic MCQ Score Calculation
+    $calculatedScore = 0;
+    foreach ($submission->exam->questions as $question) {
+        $selectedOptionId = $studentAnswers[$question->id] ?? null;
+        if ($selectedOptionId) {
+            $correctOption = $question->options->where('is_correct', true)->first();
+            if ($correctOption && $correctOption->id == $selectedOptionId) {
+                $calculatedScore += 1; // Question එකකට 1 බැගින් (නැත්නම් $question->marks)
+            }
+        }
+    }
+
+    // Teacher grade කර නැත්නම් Auto score එක පෙන්වීම
+    $displayScore = $submission->score ?? $calculatedScore;
+
+    return view('student_portal.exam_result', compact('submission', 'studentAnswers', 'displayScore'));
+   }
 }

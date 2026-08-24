@@ -137,10 +137,10 @@ class TeacherPortalController extends Controller
             }
         }
 
+        // Database එකෙහි පවතින්නේ teacher_feedback පමණක් නිසා 'feedback' ඉවත් කර ඇත
         $submission->update([
             'score' => $totalScore,
             'teacher_feedback' => $request->input('teacher_feedback') ?? $request->input('feedback'),
-            'feedback' => $request->input('feedback') ?? $request->input('teacher_feedback'),
             'status' => 'graded',
             'graded_at' => now(),
         ]);
@@ -152,6 +152,7 @@ class TeacherPortalController extends Controller
     {
         $request->validate([
             'feedback' => 'nullable|string',
+            'teacher_feedback' => 'nullable|string',
             'score' => 'nullable|numeric'
         ]);
 
@@ -159,8 +160,7 @@ class TeacherPortalController extends Controller
 
         $submission->update([
             'score' => $request->has('score') ? $request->input('score') : $submission->score,
-            'feedback' => $request->input('feedback'),
-            'teacher_feedback' => $request->input('feedback'),
+            'teacher_feedback' => $request->input('teacher_feedback') ?? $request->input('feedback'),
             'status' => 'graded',
         ]);
 

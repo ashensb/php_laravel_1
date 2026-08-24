@@ -3,6 +3,31 @@
 @section('content')
 <div class="container-fluid px-4 py-4" style="background-color:#0f1115; min-height:100vh;">
     
+    <!-- Automatic Score Calculation for Display -->
+    @php
+        $calculatedScore = 0;
+        foreach($submission->exam->questions as $key => $q) {
+            $userAns = $studentAnswers[$q->id] 
+                        ?? $studentAnswers[(string)$q->id] 
+                        ?? $studentAnswers[$key] 
+                        ?? null;
+
+            if (is_array($userAns)) {
+                $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+            }
+
+            $cOpt = $q->options->where('is_correct', true)->first();
+            if ($cOpt && $userAns !== null) {
+                if ($userAns == $cOpt->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$cOpt->option_text))) {
+                    $calculatedScore += ($q->marks ?? 1);
+                }
+            }
+        }
+
+        // Final Score: Use teacher graded score if set, else use auto-calculated score
+        $finalDisplayScore = $submission->score ?? $calculatedScore;
+    @endphp
+
     <!-- Top Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom:1px solid #23262f;">
         <div>
@@ -22,12 +47,12 @@
                     <div class="col-md-4 mb-3 mb-md-0">
                         <small class="text-uppercase fw-bold d-block mb-1" style="color:#8b93a1; letter-spacing:0.5px;">Final Score</small>
                         <h2 class="fw-bold mb-0" style="color:#34d399;">
-                            {{ $submission->score ?? 0 }} <span style="font-size: 1.2rem; color:#8b93a1;">/ {{ $submission->exam->total_marks }}</span>
+                            {{ $finalDisplayScore }} <span style="font-size: 1.2rem; color:#8b93a1;">/ {{ $submission->exam->total_marks }}</span>
                         </h2>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
                         <small class="text-uppercase fw-bold d-block mb-1" style="color:#8b93a1; letter-spacing:0.5px;">Status</small>
-                        <span class="badge px-3 py-2 text-uppercase" style="background:#064e3b; color:#34d399; border:1px solid #059669;">
+                        <span class="badge px-3 py-2 text-uppercase" style="background:{{ strtolower($submission->status) === 'pending' ? '#854d0e' : '#064e3b' }}; color:{{ strtolower($submission->status) === 'pending' ? '#fef08a' : '#34d399' }}; border:1px solid {{ strtolower($submission->status) === 'pending' ? '#ca8a04' : '#059669' }};">
                             {{ strtoupper($submission->status ?? 'Graded') }}
                         </span>
                     </div>
@@ -38,7 +63,7 @@
                 </div>
 
                 @php
-                    $overallFeedback = $submission->feedback ?? $submission->teacher_feedback;
+                    $overallFeedback = $submission->teacher_feedback ?? $submission->feedback;
                 @endphp
                 @if($overallFeedback)
                     <div class="mt-4 p-3 rounded-3" style="background:#1a2332; border-left:4px solid #60a5fa;">
