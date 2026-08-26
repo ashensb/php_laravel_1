@@ -136,3 +136,7 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
     Route::delete('/exams/{id}', [ExamController::class, 'destroy'])->name('exams.destroy');
 });
 
+// Teacher Result Export Route
+Route::get('/teacher/exams/{examId}/export-report', [TeacherPortalController::class, 'exportExamReport'])
+    ->name('teacher.exams.export_report');
+

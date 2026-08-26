@@ -54,12 +54,14 @@ class TeacherPortalController extends Controller
         $user = Auth::user();
         $teacher = Teacher::where('email', $user->email)->first();
 
-        // Teacher ගේ Exams වල ID ලබා ගැනීම
-        $teacherExamIds = Exam::where('created_by', $user->id)
+        // Teacher ගේ Exams ලබා ගැනීම (Export dropdown එක සඳහාද සමඟ)
+        $teacherExams = Exam::where('created_by', $user->id)
             ->when($teacher, function ($query) use ($teacher) {
                 return $query->orWhere('created_by', $teacher->id);
             })
-            ->pluck('id');
+            ->get();
+
+        $teacherExamIds = $teacherExams->pluck('id');
 
         // Submissions Model Relationships සමඟ ලබා ගැනීම
         $submissions = ExamSubmission::with(['exam', 'student'])
@@ -67,7 +69,7 @@ class TeacherPortalController extends Controller
             ->latest('submitted_at')
             ->paginate(10);
 
-        return view('teacher.submissions', compact('submissions'));
+        return view('teacher.submissions', compact('submissions', 'teacherExams'));
     }
 
     public function showSubmission($id)
@@ -77,7 +79,6 @@ class TeacherPortalController extends Controller
             'student'
         ])->findOrFail($id);
 
-        // Answers Raw format එක Array එකක් බවට Decode කර ගැනීම
         $rawAnswers = $submission->answers;
         $studentAnswers = [];
 
@@ -94,7 +95,6 @@ class TeacherPortalController extends Controller
             $qMarks = $question->marks ?? 1;
             $maxScore += $qMarks;
 
-            // Key match: Question ID හෝ Array Index
             $userSelected = $studentAnswers[$question->id] 
                          ?? $studentAnswers[(string)$question->id] 
                          ?? $studentAnswers[$index] 
@@ -137,7 +137,6 @@ class TeacherPortalController extends Controller
             }
         }
 
-        // Database එකෙහි පවතින්නේ teacher_feedback පමණක් නිසා 'feedback' ඉවත් කර ඇත
         $submission->update([
             'score' => $totalScore,
             'teacher_feedback' => $request->input('teacher_feedback') ?? $request->input('feedback'),
@@ -166,4 +165,94 @@ class TeacherPortalController extends Controller
 
         return redirect()->back()->with('success', 'Submission graded and feedback sent successfully!');
     }
+
+    // Export Pass/Fail Exam Report to CSV
+    public function exportExamReport($examId)
+   {
+    // Questions and Student Submissions Load 
+    $exam = Exam::with(['questions.options'])->findOrFail($examId);
+    $submissions = ExamSubmission::with('student')
+        ->where('exam_id', $examId)
+        ->get();
+
+    $fileName = 'Exam_Report_' . str_replace(' ', '_', $exam->title) . '_' . date('Y-m-d') . '.csv';
+
+    $headers = [
+        "Content-type"        => "text/csv",
+        "Content-Disposition" => "attachment; filename=$fileName",
+        "Pragma"              => "no-cache",
+        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        "Expires"             => "0"
+    ];
+
+    $columns = ['Student ID', 'Student Name', 'Email', 'Correct Answers', 'Total Questions', 'Score Percentage', 'Status', 'Submitted At'];
+
+    $callback = function() use ($submissions, $exam, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
+
+        // 1. Exam Total Max Score එ
+        $totalExamMarks = 0;
+        foreach ($exam->questions as $q) {
+            $totalExamMarks += ($q->marks ?? 1);
+        }
+
+        // පnot problem soo Divide by zero 
+        if ($totalExamMarks <= 0) {
+            $totalExamMarks = count($exam->questions) > 0 ? count($exam->questions) : 1;
+        }
+
+        foreach ($submissions as $sub) {
+            $earnedScore = 0;
+            $studentAns = is_string($sub->answers) ? json_decode($sub->answers, true) : ($sub->answers ?? []);
+
+            //  (Auto Calculate)
+            foreach ($exam->questions as $index => $q) {
+                $qMarks = $q->marks ?? 1;
+
+                // Question ID or Index  Selected Option 
+                $userAns = $studentAns[$q->id] 
+                         ?? $studentAns[(string)$q->id] 
+                         ?? $studentAns[$index] 
+                         ?? null;
+
+                if (is_array($userAns)) {
+                    $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+                }
+
+                $correctOption = $q->options->where('is_correct', true)->first();
+
+                if ($correctOption && $userAns !== null) {
+                    if ($userAns == $correctOption->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$correctOption->option_text))) {
+                        $earnedScore += $qMarks;
+                    }
+                }
+            }
+
+            // DB  Score  Update  Calculate වූ Score 
+            $finalScore = $sub->score !== null ? $sub->score : $earnedScore;
+
+            // 3. Percentage (ex: 2/2  100%, 1/2  50%)
+            $percentage = round(($finalScore / $totalExamMarks) * 100, 2);
+
+            // 4. Pass / Fail Status  (50% over PASS, less than FAIL)
+            $status = $percentage >= 50 ? 'PASS' : 'FAIL';
+
+            fputcsv($file, [
+                $sub->student->id ?? 'N/A',
+                $sub->student->name ?? 'Unknown Student',
+                $sub->student->email ?? 'N/A',
+                $finalScore,
+                $totalExamMarks,
+                $percentage . '%',
+                $status,
+                $sub->submitted_at ? \Carbon\Carbon::parse($sub->submitted_at)->format('Y-m-d H:i') : 'N/A'
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+   }
 }
