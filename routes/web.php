@@ -137,6 +137,6 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
 });
 
 // Teacher Result Export Route
-Route::get('/teacher/exams/{examId}/export-report', [TeacherPortalController::class, 'exportExamReport'])
-    ->name('teacher.exams.export_report');
 
+
+Route::get('/teacher/export-exam-report/{examId?}', [TeacherPortalController::class, 'exportExamReport'])->name('teacher.exportExamReport');

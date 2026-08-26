@@ -53,6 +53,33 @@
         </div>
     </div>
 
+    <!-- Analytics Charts Section -->
+    <div class="row g-3 mb-4">
+        <!-- Pass vs Fail Ratio Doughnut Chart -->
+        <div class="col-lg-5">
+            <div class="rounded-4 shadow-sm p-4 h-100" style="background:#161a22; border:1px solid #23262f;">
+                <h5 class="fw-bold mb-3" style="color:#f1f3f7;"><i class="bi bi-pie-chart-fill me-2" style="color:#3b82f6;"></i>Overall Student Pass / Fail Ratio</h5>
+                <div style="max-height: 250px; position: relative;" class="d-flex justify-content-center">
+                    <canvas id="passFailChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-center gap-4 mt-3">
+                    <span style="color:#10b981;" class="fw-semibold"><i class="bi bi-circle-fill me-1"></i> Passed: {{ $totalPassed }}</span>
+                    <span style="color:#ef4444;" class="fw-semibold"><i class="bi bi-circle-fill me-1"></i> Failed: {{ $totalFailed }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exam Pass Rates Bar Chart -->
+        <div class="col-lg-7">
+            <div class="rounded-4 shadow-sm p-4 h-100" style="background:#161a22; border:1px solid #23262f;">
+                <h5 class="fw-bold mb-3" style="color:#f1f3f7;"><i class="bi bi-bar-chart-line-fill me-2" style="color:#a855f7;"></i>Exam Pass Rates (%)</h5>
+                <div style="max-height: 260px; position: relative;">
+                    <canvas id="examPassRateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Content Row -->
     <div class="row g-3">
         <!-- Assigned Batches Table -->
@@ -119,4 +146,66 @@
     </div>
 
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Pass vs Fail Doughnut Chart
+    const passFailCtx = document.getElementById('passFailChart').getContext('2d');
+    new Chart(passFailCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Passed', 'Failed'],
+            datasets: [{
+                data: [{{ $totalPassed }}, {{ $totalFailed }}],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // 2. Exam Pass Rate Bar Chart
+    const examCtx = document.getElementById('examPassRateChart').getContext('2d');
+    new Chart(examCtx, {
+        type: 'bar',
+        data: {
+            labels: {!! json_encode($chartLabels) !!},
+            datasets: [{
+                label: 'Pass Rate (%)',
+                data: {!! json_encode($chartPassData) !!},
+                backgroundColor: '#a855f7',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: '#23262f' },
+                    ticks: { color: '#8b93a1' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#8b93a1' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+});
+</script>
 @endsection

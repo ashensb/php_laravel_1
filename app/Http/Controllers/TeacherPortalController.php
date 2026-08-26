@@ -11,11 +11,12 @@ use App\Models\ExamSubmission;
 
 class TeacherPortalController extends Controller
 {
+    /**
+     * Teacher Dashboard with Dynamic Score Calculation for Analytics Charts
+     */
     public function dashboard()
     {
         $user = Auth::user();
-
-        // 1. Finding the Teacher associated with the Logged-in User's Email
         $teacher = Teacher::where('email', $user->email)->first();
 
         if (!$teacher) {
@@ -24,10 +25,13 @@ class TeacherPortalController extends Controller
                 'assignedBatchesCount' => 0,
                 'totalStudentsCount' => 0,
                 'activeModulesCount' => 0,
+                'totalPassed' => 0,
+                'totalFailed' => 0,
+                'chartLabels' => [],
+                'chartPassData' => [],
             ]);
         }
 
-        // 2. Retrieve only Batches that match the relevant Teacher ID (with students count)
         $batches = Batch::where('teacher_id', $teacher->id)
             ->withCount('students')
             ->latest()
@@ -36,25 +40,97 @@ class TeacherPortalController extends Controller
         $assignedBatchesCount = $batches->count();
         $totalStudentsCount = $batches->sum('students_count');
 
-        // 3. Counting Exams created by Teacher using the 'created_by' column in the Exams table
-        $activeModulesCount = Exam::where('created_by', $user->id)
+        $exams = Exam::where('created_by', $user->id)
             ->orWhere('created_by', $teacher->id)
-            ->count();
+            ->with(['questions.options', 'submissions'])
+            ->get();
+
+        $activeModulesCount = $exams->count();
+
+        $totalPassed = 0;
+        $totalFailed = 0;
+        $chartLabels = [];
+        $chartPassData = [];
+
+        foreach ($exams as $exam) {
+            $examTotalMarks = 0;
+            foreach ($exam->questions as $q) {
+                $examTotalMarks += ($q->marks ?? 1);
+            }
+
+            if ($examTotalMarks <= 0) {
+                $examTotalMarks = count($exam->questions) > 0 ? count($exam->questions) : 1;
+            }
+
+            $examPassCount = 0;
+            $submissionsCount = $exam->submissions->count();
+
+            foreach ($exam->submissions as $sub) {
+                if ($sub->score !== null) {
+                    $finalScore = $sub->score;
+                } else {
+                    $earnedScore = 0;
+                    $studentAns = is_string($sub->answers) ? json_decode($sub->answers, true) : ($sub->answers ?? []);
+
+                    foreach ($exam->questions as $index => $q) {
+                        $qMarks = $q->marks ?? 1;
+
+                        $userAns = $studentAns[$q->id] 
+                                 ?? $studentAns[(string)$q->id] 
+                                 ?? $studentAns[$index] 
+                                 ?? null;
+
+                        if (is_array($userAns)) {
+                            $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+                        }
+
+                        $correctOption = $q->options->where('is_correct', true)->first();
+
+                        if ($correctOption && $userAns !== null) {
+                            if ($userAns == $correctOption->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$correctOption->option_text))) {
+                                $earnedScore += $qMarks;
+                            }
+                        }
+                    }
+                    $finalScore = $earnedScore;
+                }
+
+                $percentage = ($finalScore / $examTotalMarks) * 100;
+
+                if ($percentage >= 50) {
+                    $totalPassed++;
+                    $examPassCount++;
+                } else {
+                    $totalFailed++;
+                }
+            }
+
+            if ($submissionsCount > 0) {
+                $chartLabels[] = $exam->title;
+                $chartPassData[] = round(($examPassCount / $submissionsCount) * 100, 1);
+            }
+        }
 
         return view('teacher.dashboard', compact(
             'batches', 
             'assignedBatchesCount', 
             'totalStudentsCount', 
-            'activeModulesCount'
+            'activeModulesCount',
+            'totalPassed',
+            'totalFailed',
+            'chartLabels',
+            'chartPassData'
         ));
     }
 
-    public function submissions()
+    /**
+     * View Submissions List with Optional Exam Filter
+     */
+    public function submissions(Request $request)
     { 
         $user = Auth::user();
         $teacher = Teacher::where('email', $user->email)->first();
 
-        // Teacher ගේ Exams ලබා ගැනීම (Export dropdown එක සඳහාද සමඟ)
         $teacherExams = Exam::where('created_by', $user->id)
             ->when($teacher, function ($query) use ($teacher) {
                 return $query->orWhere('created_by', $teacher->id);
@@ -62,16 +138,53 @@ class TeacherPortalController extends Controller
             ->get();
 
         $teacherExamIds = $teacherExams->pluck('id');
+        $selectedExamId = $request->query('exam_id');
 
-        // Submissions Model Relationships සමඟ ලබා ගැනීම
-        $submissions = ExamSubmission::with(['exam', 'student'])
-            ->whereIn('exam_id', $teacherExamIds)
-            ->latest('submitted_at')
-            ->paginate(10);
+        $query = ExamSubmission::with(['exam.questions.options', 'student'])
+            ->whereIn('exam_id', $teacherExamIds);
 
-        return view('teacher.submissions', compact('submissions', 'teacherExams'));
+        if ($selectedExamId) {
+            $query->where('exam_id', $selectedExamId);
+        }
+
+        $submissions = $query->latest('submitted_at')->paginate(10);
+
+        foreach ($submissions as $sub) {
+            if ($sub->score === null && $sub->exam) {
+                $earnedScore = 0;
+                $studentAns = is_string($sub->answers) ? json_decode($sub->answers, true) : ($sub->answers ?? []);
+
+                foreach ($sub->exam->questions as $index => $q) {
+                    $qMarks = $q->marks ?? 1;
+                    $userAns = $studentAns[$q->id] 
+                             ?? $studentAns[(string)$q->id] 
+                             ?? $studentAns[$index] 
+                             ?? null;
+
+                    if (is_array($userAns)) {
+                        $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+                    }
+
+                    $correctOption = $q->options->where('is_correct', true)->first();
+
+                    if ($correctOption && $userAns !== null) {
+                        if ($userAns == $correctOption->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$correctOption->option_text))) {
+                            $earnedScore += $qMarks;
+                        }
+                    }
+                }
+                $sub->calculated_score = $earnedScore;
+            } else {
+                $sub->calculated_score = $sub->score;
+            }
+        }
+
+        return view('teacher.submissions', compact('submissions', 'teacherExams', 'selectedExamId'));
     }
 
+    /**
+     * Show Detailed Single Submission Page
+     */
     public function showSubmission($id)
     {
         $submission = ExamSubmission::with([
@@ -116,24 +229,34 @@ class TeacherPortalController extends Controller
         return view('teacher.submission_show', compact('submission', 'studentAnswers', 'totalScore', 'maxScore'));
     }
 
+    /**
+     * First-time Grade Submission & Save Feedback
+     */
     public function gradeSubmission(Request $request, $id)
     {
         $submission = ExamSubmission::with(['exam.questions.options'])->findOrFail($id);
         $studentAnswers = is_string($submission->answers) ? json_decode($submission->answers, true) : ($submission->answers ?? []);
 
         $totalScore = 0;
-        $maxScore = 0;
 
-        foreach ($submission->exam->questions as $question) {
+        foreach ($submission->exam->questions as $index => $question) {
             $questionMarks = $question->marks ?? 1;
-            $maxScore += $questionMarks;
 
-            $selectedOptionId = $studentAnswers[$question->id] ?? $studentAnswers[(string)$question->id] ?? null;
+            $selectedOptionId = $studentAnswers[$question->id] 
+                              ?? $studentAnswers[(string)$question->id] 
+                              ?? $studentAnswers[$index] 
+                              ?? null;
+
+            if (is_array($selectedOptionId)) {
+                $selectedOptionId = $selectedOptionId['option_id'] ?? $selectedOptionId['answer'] ?? $selectedOptionId[0] ?? null;
+            }
 
             $correctOption = $question->options->where('is_correct', true)->first();
 
-            if ($correctOption && ($selectedOptionId == $correctOption->id || $selectedOptionId == $correctOption->option_text)) {
-                $totalScore += $questionMarks;
+            if ($correctOption && $selectedOptionId !== null) {
+                if ($selectedOptionId == $correctOption->id || trim(strtolower((string)$selectedOptionId)) === trim(strtolower((string)$correctOption->option_text))) {
+                    $totalScore += $questionMarks;
+                }
             }
         }
 
@@ -147,6 +270,9 @@ class TeacherPortalController extends Controller
         return redirect()->back()->with('success', 'Submission graded and feedback sent to student successfully!');
     }
 
+    /**
+     * Update Existing Grade / Manual Overwrite
+     */
     public function updateGrade(Request $request, $id)
     {
         $request->validate([
@@ -166,93 +292,107 @@ class TeacherPortalController extends Controller
         return redirect()->back()->with('success', 'Submission graded and feedback sent successfully!');
     }
 
-    // Export Pass/Fail Exam Report to CSV
-    public function exportExamReport($examId)
-   {
-    // Questions and Student Submissions Load 
-    $exam = Exam::with(['questions.options'])->findOrFail($examId);
-    $submissions = ExamSubmission::with('student')
-        ->where('exam_id', $examId)
-        ->get();
+    /**
+     * Export Pass/Fail Exam Report to CSV (Supports Single Exam or All Exams)
+     */
+    public function exportExamReport(Request $request, $examId = null)
+    {
+        $user = Auth::user();
+        $teacher = Teacher::where('email', $user->email)->first();
 
-    $fileName = 'Exam_Report_' . str_replace(' ', '_', $exam->title) . '_' . date('Y-m-d') . '.csv';
+        $examId = $examId ?? $request->query('exam_id');
 
-    $headers = [
-        "Content-type"        => "text/csv",
-        "Content-Disposition" => "attachment; filename=$fileName",
-        "Pragma"              => "no-cache",
-        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-        "Expires"             => "0"
-    ];
+        // Fetch valid Exams owned by the teacher
+        $teacherExams = Exam::where('created_by', $user->id)
+            ->when($teacher, function ($query) use ($teacher) {
+                return $query->orWhere('created_by', $teacher->id);
+            })
+            ->pluck('id');
 
-    $columns = ['Student ID', 'Student Name', 'Email', 'Correct Answers', 'Total Questions', 'Score Percentage', 'Status', 'Submitted At'];
+        $query = ExamSubmission::with(['student', 'exam.questions.options'])
+            ->whereIn('exam_id', $teacherExams);
 
-    $callback = function() use ($submissions, $exam, $columns) {
-        $file = fopen('php://output', 'w');
-        fputcsv($file, $columns);
-
-        // 1. Exam Total Max Score එ
-        $totalExamMarks = 0;
-        foreach ($exam->questions as $q) {
-            $totalExamMarks += ($q->marks ?? 1);
+        if ($examId) {
+            $query->where('exam_id', $examId);
+            $examTitle = Exam::where('id', $examId)->value('title') ?? 'Exam';
+            $fileName = 'Exam_Report_' . str_replace(' ', '_', $examTitle) . '_' . date('Y-m-d') . '.csv';
+        } else {
+            $fileName = 'All_Exams_Report_' . date('Y-m-d') . '.csv';
         }
 
-        // පnot problem soo Divide by zero 
-        if ($totalExamMarks <= 0) {
-            $totalExamMarks = count($exam->questions) > 0 ? count($exam->questions) : 1;
-        }
+        $submissions = $query->get();
 
-        foreach ($submissions as $sub) {
-            $earnedScore = 0;
-            $studentAns = is_string($sub->answers) ? json_decode($sub->answers, true) : ($sub->answers ?? []);
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
 
-            //  (Auto Calculate)
-            foreach ($exam->questions as $index => $q) {
-                $qMarks = $q->marks ?? 1;
+        $columns = ['Student ID', 'Student Name', 'Email', 'Exam Title', 'Correct Answers', 'Total Questions', 'Score Percentage', 'Status', 'Submitted At'];
 
-                // Question ID or Index  Selected Option 
-                $userAns = $studentAns[$q->id] 
-                         ?? $studentAns[(string)$q->id] 
-                         ?? $studentAns[$index] 
-                         ?? null;
+        $callback = function() use ($submissions, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
 
-                if (is_array($userAns)) {
-                    $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+            foreach ($submissions as $sub) {
+                $exam = $sub->exam;
+                if (!$exam) continue;
+
+                $totalExamMarks = 0;
+                foreach ($exam->questions as $q) {
+                    $totalExamMarks += ($q->marks ?? 1);
                 }
 
-                $correctOption = $q->options->where('is_correct', true)->first();
+                if ($totalExamMarks <= 0) {
+                    $totalExamMarks = count($exam->questions) > 0 ? count($exam->questions) : 1;
+                }
 
-                if ($correctOption && $userAns !== null) {
-                    if ($userAns == $correctOption->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$correctOption->option_text))) {
-                        $earnedScore += $qMarks;
+                $earnedScore = 0;
+                $studentAns = is_string($sub->answers) ? json_decode($sub->answers, true) : ($sub->answers ?? []);
+
+                foreach ($exam->questions as $index => $q) {
+                    $qMarks = $q->marks ?? 1;
+
+                    $userAns = $studentAns[$q->id] 
+                             ?? $studentAns[(string)$q->id] 
+                             ?? $studentAns[$index] 
+                             ?? null;
+
+                    if (is_array($userAns)) {
+                        $userAns = $userAns['option_id'] ?? $userAns['answer'] ?? $userAns[0] ?? null;
+                    }
+
+                    $correctOption = $q->options->where('is_correct', true)->first();
+
+                    if ($correctOption && $userAns !== null) {
+                        if ($userAns == $correctOption->id || trim(strtolower((string)$userAns)) === trim(strtolower((string)$correctOption->option_text))) {
+                            $earnedScore += $qMarks;
+                        }
                     }
                 }
+
+                $finalScore = $sub->score !== null ? $sub->score : $earnedScore;
+                $percentage = round(($finalScore / $totalExamMarks) * 100, 2);
+                $status = $percentage >= 50 ? 'PASS' : 'FAIL';
+
+                fputcsv($file, [
+                    $sub->student->id ?? 'N/A',
+                    $sub->student->name ?? 'Unknown Student',
+                    $sub->student->email ?? 'N/A',
+                    $exam->title ?? 'N/A',
+                    $finalScore,
+                    $totalExamMarks,
+                    $percentage . '%',
+                    $status,
+                    $sub->submitted_at ? \Carbon\Carbon::parse($sub->submitted_at)->format('Y-m-d H:i') : 'N/A'
+                ]);
             }
 
-            // DB  Score  Update  Calculate වූ Score 
-            $finalScore = $sub->score !== null ? $sub->score : $earnedScore;
+            fclose($file);
+        };
 
-            // 3. Percentage (ex: 2/2  100%, 1/2  50%)
-            $percentage = round(($finalScore / $totalExamMarks) * 100, 2);
-
-            // 4. Pass / Fail Status  (50% over PASS, less than FAIL)
-            $status = $percentage >= 50 ? 'PASS' : 'FAIL';
-
-            fputcsv($file, [
-                $sub->student->id ?? 'N/A',
-                $sub->student->name ?? 'Unknown Student',
-                $sub->student->email ?? 'N/A',
-                $finalScore,
-                $totalExamMarks,
-                $percentage . '%',
-                $status,
-                $sub->submitted_at ? \Carbon\Carbon::parse($sub->submitted_at)->format('Y-m-d H:i') : 'N/A'
-            ]);
-        }
-
-        fclose($file);
-    };
-
-    return response()->stream($callback, 200, $headers);
-   }
+        return response()->stream($callback, 200, $headers);
+    }
 }
