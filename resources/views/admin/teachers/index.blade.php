@@ -2,21 +2,40 @@
 
 @section('content')
 <div class="container-fluid py-4">
+    <!-- Header Area -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Teacher List</h2>
-        <a href="{{ route('teacher.create') }}" class="btn btn-primary">+ Add New Teacher</a>
+        <div class="d-flex gap-2">
+            <!-- Import Teachers Button -->
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importTeacherModal">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Teachers
+            </button>
+
+            <!-- Export PDF Button -->
+            <a href="{{ route('teachers.export-pdf', ['search' => request('search')]) }}" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF
+            </a>
+
+            <!-- Add New Teacher Button -->
+            <a href="{{ route('teacher.create') }}" class="btn btn-primary">+ Add New Teacher</a>
+        </div>
     </div>
 
+    <!-- Success Alert -->
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
-    <div>
-       <a href="{{ route('teachers.export-pdf', ['search' => request('search')]) }}" class="btn btn-danger ms-2">
-         <i class="bi bi-file-earmark-pdf-fill me-1"></i> Export PDF
-       </a>
-
-    </div>
+    <!-- Error Alert -->
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <!-- Search Bar -->
     <div class="row mb-3 align-items-center">
@@ -40,6 +59,7 @@
         </div>
     </div>
 
+    <!-- Table -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <table class="table table-bordered table-striped align-middle mb-0">
@@ -81,6 +101,31 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importTeacherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Bulk Import Teachers</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('teacher.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Excel/CSV File</label>
+                        <input type="file" name="file" class="form-control" accept=".xlsx, .xls, .csv" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Upload & Import</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

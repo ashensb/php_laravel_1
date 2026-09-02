@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [StudentController::class, 'edit'])->name('student.edit');
         Route::put('/{id}', [StudentController::class, 'update'])->name('student.update');
         Route::delete('/{id}', [StudentController::class, 'destroy'])->name('student.destroy');
+        // FIX: Changed StudentController::php to StudentController::class
+        Route::post('/import', [StudentController::class, 'import'])->name('students.import');
     });
 
     // Batch Management
@@ -77,16 +79,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [TeacherController::class, 'edit'])->name('teacher.edit');
         Route::put('/{id}', [TeacherController::class, 'update'])->name('teacher.update');
         Route::delete('/{id}', [TeacherController::class, 'destroy'])->name('teacher.destroy');
+        Route::post('/import', [TeacherController::class, 'import'])->name('teacher.import');
     });
 
     // Student Portal & Exam Routes
-  Route::prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', [StudentPortalController::class, 'index'])->name('dashboard');
-    Route::get('/portal', [StudentPortalController::class, 'index'])->name('portal');
-    Route::get('/exam/{id}', [StudentPortalController::class, 'showExam'])->name('exam.show');
-    Route::post('/exam/{examId}/submit', [StudentPortalController::class, 'submitExam'])->name('exam.submit');
-    Route::get('/exam/{id}/result', [StudentPortalController::class, 'viewResult'])->name('exam.result');
-   });
+    Route::prefix('student')->name('student.')->group(function () {
+        Route::get('/dashboard', [StudentPortalController::class, 'index'])->name('dashboard');
+        Route::get('/portal', [StudentPortalController::class, 'index'])->name('portal');
+        Route::get('/exam/{id}', [StudentPortalController::class, 'showExam'])->name('exam.show');
+        Route::post('/exam/{examId}/submit', [StudentPortalController::class, 'submitExam'])->name('exam.submit');
+        Route::get('/exam/{id}/result', [StudentPortalController::class, 'viewResult'])->name('exam.result');
+    });
 
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -137,6 +140,5 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
 });
 
 // Teacher Result Export Route
+Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
 
-
-Route::get('/teacher/export-exam-report/{examId?}', [TeacherPortalController::class, 'exportExamReport'])->name('teacher.exportExamReport');

@@ -7,6 +7,8 @@ use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Imports\TeachersImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TeacherController extends Controller
 {
@@ -151,4 +153,30 @@ class TeacherController extends Controller
         $pdf = Pdf::loadView('reports.teachers-pdf', compact('teachers'));
         return $pdf->download('teacher-list.pdf');
     }
+
+
+    public function import(Request $request)
+  {
+    $request->validate([
+        'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+    ]);
+
+    try {
+        Excel::import(new TeachersImport, $request->file('file'));
+
+        return redirect()->route('teacher.index')
+            ->with('success', 'Teachers imported successfully!');
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        $failures = $e->failures();
+        $errorMessage = '';
+
+        foreach ($failures as $failure) {
+            $errorMessage .= 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors()) . ' | ';
+        }
+
+        return redirect()->back()->with('error', $errorMessage);
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Import Error: ' . $e->getMessage());
+    }
+   }
 }
