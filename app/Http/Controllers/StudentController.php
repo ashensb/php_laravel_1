@@ -204,7 +204,7 @@ class StudentController extends Controller
             $errorMessage = '';
             
             foreach ($failures as $failure) {
-                // Fail වුණු Row එක සහ එකට අදාළ Field Errors විස්තරාත්මකව එකතු කරගැනීම
+                
                 $errorMessage .= 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors()) . ' | ';
             }
 

@@ -18,7 +18,7 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
             ? Date::excelToDateTimeObject($row['dob'])->format('Y-m-d') 
             : date('Y-m-d', strtotime($row['dob']));
 
-        // Email එක නැත්නම් විතරක් අලුතෙන් User කෙනෙක් සාදයි
+       
         User::firstOrCreate(
             ['email' => $row['email_address']],
             [
@@ -28,7 +28,7 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
             ]
         );
 
-        // Student Record එක එකතු කිරීම
+       
         return new Student([
             'reg_no'   => $row['registration_no'],
             'name'     => $row['full_name'],
@@ -46,7 +46,7 @@ class StudentsImport implements ToModel, WithHeadingRow, WithValidation
         return [
             'registration_no' => 'required|unique:students,reg_no',
             'full_name'       => 'required|string',
-            'email_address'   => 'required|email|unique:students,email', // users table එක unique rule එකෙන් ඉවත් කළා
+            'email_address'   => 'required|email|unique:students,email', 
             'batch_id'        => 'required|exists:batches,id',
             'dob'             => 'required',
             'age'             => 'required|integer',

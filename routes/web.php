@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', [TeacherController::class, 'edit'])->name('teacher.edit');
         Route::put('/{id}', [TeacherController::class, 'update'])->name('teacher.update');
         Route::delete('/{id}', [TeacherController::class, 'destroy'])->name('teacher.destroy');
+        Route::post('/import', [TeacherController::class, 'import'])->name('teacher.import');
     });
 
     // Student Portal & Exam Routes
@@ -140,3 +141,4 @@ Route::middleware(['auth'])->prefix('teacher')->name('teacher.')->group(function
 
 // Teacher Result Export Route
 Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
+
