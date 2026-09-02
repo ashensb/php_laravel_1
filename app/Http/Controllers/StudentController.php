@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Imports\StudentsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -183,5 +185,32 @@ class StudentController extends Controller
 
         $pdf = Pdf::loadView('reports.students-pdf', compact('students'));
         return $pdf->download('student-list.pdf');
+    }
+
+    // 9. Import Excel File Function
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new StudentsImport, $request->file('file'));
+            
+            return redirect()->route('student.index')
+                ->with('success', 'Bulk registration completed successfully!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessage = '';
+            
+            foreach ($failures as $failure) {
+                // Fail වුණු Row එක සහ එකට අදාළ Field Errors විස්තරාත්මකව එකතු කරගැනීම
+                $errorMessage .= 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors()) . ' | ';
+            }
+
+            return redirect()->back()->with('error', $errorMessage);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Import Error: ' . $e->getMessage());
+        }
     }
 }
